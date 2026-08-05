@@ -209,54 +209,56 @@ export class PeriodService {
   }
 
   static async closePeriod(payload: IClosePeriodPayload) {
-    const period = await prisma.period.findUnique({
-      where: { id: payload.periodId },
+    return prisma.$transaction(async (tx) => {
+      const period = await tx.period.findUnique({
+        where: { id: payload.periodId },
+      });
+
+      if (!period) {
+        throw new NotFoundError("Period to close was not found");
+      }
+
+      if (period.status === "CLOSED") {
+        throw new BadRequestError("Period is already closed");
+      }
+
+      const [meals, expenses] = await Promise.all([
+        tx.mealEntry.findMany({ where: { periodId: period.id } }),
+        tx.expense.findMany({ where: { periodId: period.id } }),
+      ]);
+
+      const totalMeals = meals.reduce((sum, m) => sum + m.mealCount, 0);
+      const totalExpense = expenses.reduce((sum, e) => sum + e.amount, 0);
+      const mealRate = totalMeals > 0 ? Math.round((totalExpense / totalMeals) * 100) / 100 : 0;
+
+      await tx.period.update({
+        where: { id: period.id },
+        data: {
+          status: "CLOSED",
+          totalMeals,
+          totalExpense,
+          mealRate,
+        },
+      });
+
+      const nextStartDate = new Date(period.endDate);
+      nextStartDate.setDate(nextStartDate.getDate() + 1);
+
+      const nextEndDate = new Date(nextStartDate.getFullYear(), nextStartDate.getMonth() + 1, 0);
+
+      const newPeriod = await tx.period.create({
+        data: {
+          label: payload.nextPeriodLabel,
+          startDate: nextStartDate,
+          endDate: nextEndDate,
+          status: "ACTIVE",
+        },
+      });
+
+      return {
+        closedPeriodId: period.id,
+        newPeriod,
+      };
     });
-
-    if (!period) {
-      throw new NotFoundError("Period to close was not found");
-    }
-
-    if (period.status === "CLOSED") {
-      throw new BadRequestError("Period is already closed");
-    }
-
-    const [meals, expenses] = await Promise.all([
-      prisma.mealEntry.findMany({ where: { periodId: period.id } }),
-      prisma.expense.findMany({ where: { periodId: period.id } }),
-    ]);
-
-    const totalMeals = meals.reduce((sum, m) => sum + m.mealCount, 0);
-    const totalExpense = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const mealRate = totalMeals > 0 ? Math.round((totalExpense / totalMeals) * 100) / 100 : 0;
-
-    await prisma.period.update({
-      where: { id: period.id },
-      data: {
-        status: "CLOSED",
-        totalMeals,
-        totalExpense,
-        mealRate,
-      },
-    });
-
-    const nextStartDate = new Date(period.endDate);
-    nextStartDate.setDate(nextStartDate.getDate() + 1);
-
-    const nextEndDate = new Date(nextStartDate.getFullYear(), nextStartDate.getMonth() + 1, 0);
-
-    const newPeriod = await prisma.period.create({
-      data: {
-        label: payload.nextPeriodLabel,
-        startDate: nextStartDate,
-        endDate: nextEndDate,
-        status: "ACTIVE",
-      },
-    });
-
-    return {
-      closedPeriodId: period.id,
-      newPeriod,
-    };
   }
 }

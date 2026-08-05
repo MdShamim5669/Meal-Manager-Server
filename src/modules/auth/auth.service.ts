@@ -8,55 +8,57 @@ import { NotFoundError } from "../../errors/NotFoundError";
 
 export class AuthService {
   static async setup(payload: IAuthSetup): Promise<IAuthResponse> {
-    const memberCount = await prisma.member.count();
-    if (memberCount > 0) {
-      throw new BadRequestError("System setup already completed. Manager already exists.");
-    }
+    return prisma.$transaction(async (tx) => {
+      const memberCount = await tx.member.count();
+      if (memberCount > 0) {
+        throw new BadRequestError("System setup already completed. Manager already exists.");
+      }
 
-    const hashedPin = await hashPin(payload.pin);
+      const hashedPin = await hashPin(payload.pin);
 
-    const manager = await prisma.member.create({
-      data: {
-        name: payload.name,
-        pinHash: hashedPin,
-        role: "MANAGER",
-        active: true,
-      },
-    });
-
-    const now = new Date();
-    const periodLabel =
-      payload.periodLabel || `${now.toLocaleString("default", { month: "long" })} ${now.getFullYear()}`;
-
-    const activePeriod = await prisma.period.findFirst({ where: { status: "ACTIVE" } });
-    if (!activePeriod) {
-      const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-      await prisma.period.create({
+      const manager = await tx.member.create({
         data: {
-          label: periodLabel,
-          startDate,
-          endDate,
-          status: "ACTIVE",
+          name: payload.name,
+          pinHash: hashedPin,
+          role: "MANAGER",
+          active: true,
         },
       });
-    }
 
-    const token = generateToken({
-      memberId: manager.id,
-      name: manager.name,
-      role: manager.role,
-    });
+      const now = new Date();
+      const periodLabel =
+        payload.periodLabel || `${now.toLocaleString("default", { month: "long" })} ${now.getFullYear()}`;
 
-    return {
-      token,
-      member: {
-        id: manager.id,
+      const activePeriod = await tx.period.findFirst({ where: { status: "ACTIVE" } });
+      if (!activePeriod) {
+        const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+        await tx.period.create({
+          data: {
+            label: periodLabel,
+            startDate,
+            endDate,
+            status: "ACTIVE",
+          },
+        });
+      }
+
+      const token = generateToken({
+        memberId: manager.id,
         name: manager.name,
         role: manager.role,
-      },
-    };
+      });
+
+      return {
+        token,
+        member: {
+          id: manager.id,
+          name: manager.name,
+          role: manager.role,
+        },
+      };
+    });
   }
 
   static async login(payload: IAuthLogin): Promise<IAuthResponse> {
