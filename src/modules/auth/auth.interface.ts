@@ -1,15 +1,12 @@
+import { z } from "zod";
+import { setupSchema, loginSchema } from "./auth.validation";
 import { Role } from "@prisma/client";
 
-export type IAuthSetup = {
-  name: string;
-  pin: string;
-  periodLabel?: string | undefined;
-};
+export type SetupInput = z.infer<typeof setupSchema>["body"];
+export type LoginInput = z.infer<typeof loginSchema>["body"];
 
-export type IAuthLogin = {
-  memberId: string;
-  pin: string;
-};
+export type IAuthSetup = SetupInput;
+export type IAuthLogin = LoginInput;
 
 export type IAuthResponse = {
   token: string;

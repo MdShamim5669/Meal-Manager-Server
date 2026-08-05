@@ -1,13 +1,11 @@
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
-import { authValidation } from "./auth.validation";
 import { AuthenticatedRequest } from "../../middlewares/auth.middleware";
 import { catchAsync, sendResponse } from "../../shared";
 
 export class AuthController {
   static setup = catchAsync(async (req: Request, res: Response) => {
-    const parsed = authValidation.setupSchema.parse(req.body);
-    const result = await AuthService.setup(parsed);
+    const result = await AuthService.setup(req.body);
 
     sendResponse(res, {
       statusCode: 201,
@@ -18,8 +16,7 @@ export class AuthController {
   });
 
   static login = catchAsync(async (req: Request, res: Response) => {
-    const parsed = authValidation.loginSchema.parse(req.body);
-    const result = await AuthService.login(parsed);
+    const result = await AuthService.login(req.body);
 
     sendResponse(res, {
       statusCode: 200,

@@ -1,9 +1,10 @@
 import express, { Application, NextFunction, Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import httpStatus from "http-status";
 import { env } from "./config/env";
 import router from "./routes";
-import { errorMiddleware } from "./middlewares/error.middleware";
+import globalErrorHandler from "./middlewares/globalErrorHandler";
 import { CronService } from "./cron/cron.service";
 
 const app: Application = express();
@@ -29,11 +30,11 @@ app.get("/", (_req: Request, res: Response) => {
 app.use("/api/v1", router);
 
 // Global Error Handler
-app.use(errorMiddleware);
+app.use(globalErrorHandler);
 
 // 404 Not Found Handler
 app.use((req: Request, res: Response, _next: NextFunction) => {
-  res.status(404).json({
+  res.status(httpStatus.NOT_FOUND).json({
     success: false,
     message: "API NOT FOUND!",
     error: {

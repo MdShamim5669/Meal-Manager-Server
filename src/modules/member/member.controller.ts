@@ -1,6 +1,5 @@
 import { Response } from "express";
 import { MemberService } from "./member.service";
-import { memberValidation } from "./member.validation";
 import { memberFilterableFields } from "./member.constant";
 import { AuthenticatedRequest } from "../../middlewares/auth.middleware";
 import { catchAsync, sendResponse, pick } from "../../shared";
@@ -20,8 +19,7 @@ export class MemberController {
   });
 
   static createMember = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
-    const parsed = memberValidation.createMemberSchema.parse(req.body);
-    const result = await MemberService.createMember(parsed);
+    const result = await MemberService.createMember(req.body);
 
     sendResponse(res, {
       statusCode: 201,
@@ -33,8 +31,7 @@ export class MemberController {
 
   static updateMember = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const parsed = memberValidation.updateMemberSchema.parse(req.body);
-    const result = await MemberService.updateMember(id, parsed);
+    const result = await MemberService.updateMember(id, req.body);
 
     sendResponse(res, {
       statusCode: 200,
