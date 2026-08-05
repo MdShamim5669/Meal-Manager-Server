@@ -5,9 +5,10 @@
 - **ORM**: Prisma ORM with modular multi-file schemas in `prisma/schema/`.
 - **Database**: PostgreSQL (hosted on Neon).
 - **Module Structure**: Feature-based architecture under `src/modules/`:
-  - `src/modules/<feature>/<feature>.validation.ts` (Zod schemas)
-  - `src/modules/<feature>/<feature>.interface.ts` (TypeScript types/DTOs)
-  - `src/modules/<feature>/<feature>.service.ts` (Business logic & Prisma operations)
+  - `src/modules/<feature>/<feature>.constant.ts` (Searchable/filterable fields & module constants)
+  - `src/modules/<feature>/<feature>.validation.ts` (Zod validation schemas)
+  - `src/modules/<feature>/<feature>.interface.ts` (TypeScript types, DTOs & filter request types)
+  - `src/modules/<feature>/<feature>.service.ts` (Business logic & Prisma DB operations)
   - `src/modules/<feature>/<feature>.controller.ts` (Request handlers & validation parsing)
   - `src/modules/<feature>/<feature>.route.ts` (Express router setup)
 - **Centralized Routing**: All module routers MUST be registered in `src/routes/index.ts`.

@@ -1,14 +1,33 @@
-import { z } from "zod";
-import { createExpenseSchema, updateExpenseSchema } from "./expense.validation";
 import { ExpenseCategory } from "@prisma/client";
 
-export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
-export type UpdateExpenseInput = z.infer<typeof updateExpenseSchema>;
+export type IExpenseFilterRequest = {
+  periodId?: string | undefined;
+  category?: ExpenseCategory | undefined;
+  paidBy?: string | undefined;
+  searchTerm?: string | undefined;
+};
 
-export interface ICreateExpensePayload extends CreateExpenseInput {}
-export interface IUpdateExpensePayload extends UpdateExpenseInput {}
+export type IExpenseCreate = {
+  date: string | Date;
+  category: ExpenseCategory;
+  amount: number;
+  paidBy: string;
+  description?: string | undefined;
+  receiptPhoto?: string | undefined;
+  periodId: string;
+};
 
-export interface IExpenseResponsePayload {
+export type IExpenseUpdate = {
+  date?: string | Date | undefined;
+  category?: ExpenseCategory | undefined;
+  amount?: number | undefined;
+  paidBy?: string | undefined;
+  description?: string | undefined;
+  receiptPhoto?: string | undefined;
+  periodId?: string | undefined;
+};
+
+export type IExpense = {
   id: string;
   date: Date;
   category: ExpenseCategory;
@@ -21,4 +40,4 @@ export interface IExpenseResponsePayload {
     id: string;
     name: string;
   };
-}
+};

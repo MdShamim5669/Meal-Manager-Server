@@ -1,11 +1,20 @@
 import { prisma } from "../../config/db";
-import { ICreateMemberPayload, IUpdateMemberPayload, IMemberResponsePayload } from "./member.interface";
+import { IMemberCreate, IMemberUpdate, IMember, IMemberFilterRequest } from "./member.interface";
 import { hashPin } from "../../utils/hash.util";
 import { NotFoundError } from "../../errors/NotFoundError";
 
 export class MemberService {
-  static async getAllMembers(): Promise<IMemberResponsePayload[]> {
+  static async getAllMembers(filters?: IMemberFilterRequest): Promise<IMember[]> {
+    const { searchTerm, role, active } = filters || {};
+
     return prisma.member.findMany({
+      where: {
+        ...(searchTerm && {
+          name: { contains: searchTerm, mode: "insensitive" },
+        }),
+        ...(role && { role }),
+        ...(active !== undefined && { active }),
+      },
       select: {
         id: true,
         name: true,
@@ -17,7 +26,7 @@ export class MemberService {
     });
   }
 
-  static async createMember(payload: ICreateMemberPayload): Promise<IMemberResponsePayload> {
+  static async createMember(payload: IMemberCreate): Promise<IMember> {
     const pinHash = await hashPin(payload.pin);
 
     return prisma.member.create({
@@ -37,7 +46,7 @@ export class MemberService {
     });
   }
 
-  static async updateMember(id: string, payload: IUpdateMemberPayload): Promise<IMemberResponsePayload> {
+  static async updateMember(id: string, payload: IMemberUpdate): Promise<IMember> {
     const existing = await prisma.member.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundError("Member not found");

@@ -1,11 +1,11 @@
 import { prisma } from "../../config/db";
-import { ICreateExpensePayload, IUpdateExpensePayload, IExpenseResponsePayload } from "./expense.interface";
+import { IExpenseCreate, IExpenseUpdate, IExpense, IExpenseFilterRequest } from "./expense.interface";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { BadRequestError } from "../../errors/BadRequestError";
 
 export class ExpenseService {
-  static async getExpensesByPeriod(periodId?: string): Promise<IExpenseResponsePayload[]> {
-    let targetPeriodId = periodId;
+  static async getExpensesByPeriod(filters?: IExpenseFilterRequest): Promise<IExpense[]> {
+    let targetPeriodId = filters?.periodId;
 
     if (!targetPeriodId) {
       const activePeriod = await prisma.period.findFirst({
@@ -18,7 +18,14 @@ export class ExpenseService {
     }
 
     return prisma.expense.findMany({
-      where: { periodId: targetPeriodId },
+      where: {
+        periodId: targetPeriodId,
+        ...(filters?.category && { category: filters.category }),
+        ...(filters?.paidBy && { paidBy: filters.paidBy }),
+        ...(filters?.searchTerm && {
+          description: { contains: filters.searchTerm, mode: "insensitive" },
+        }),
+      },
       include: {
         member: {
           select: { id: true, name: true },
@@ -28,7 +35,7 @@ export class ExpenseService {
     });
   }
 
-  static async createExpense(payload: ICreateExpensePayload): Promise<IExpenseResponsePayload> {
+  static async createExpense(payload: IExpenseCreate): Promise<IExpense> {
     const period = await prisma.period.findUnique({
       where: { id: payload.periodId },
     });
@@ -57,7 +64,7 @@ export class ExpenseService {
     });
   }
 
-  static async updateExpense(id: string, payload: IUpdateExpensePayload): Promise<IExpenseResponsePayload> {
+  static async updateExpense(id: string, payload: IExpenseUpdate): Promise<IExpense> {
     const existing = await prisma.expense.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundError("Expense record not found");

@@ -8,7 +8,15 @@ export class MealController {
   static async getMeals(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const periodId = req.query.periodId as string | undefined;
-      const meals = await MealService.getMealsByPeriod(periodId);
+      const memberId = req.query.memberId as string | undefined;
+      const date = req.query.date as string | undefined;
+
+      const meals = await MealService.getMealsByPeriod({
+        periodId,
+        memberId,
+        date,
+      });
+
       res.json(meals);
     } catch (error) {
       next(error);

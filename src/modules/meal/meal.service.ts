@@ -1,11 +1,11 @@
 import { prisma } from "../../config/db";
-import { IUpsertMealPayload, IMealEntryResponsePayload } from "./meal.interface";
+import { IMealUpsert, IMealEntry, IMealFilterRequest } from "./meal.interface";
 import { BadRequestError } from "../../errors/BadRequestError";
 import { NotFoundError } from "../../errors/NotFoundError";
 
 export class MealService {
-  static async getMealsByPeriod(periodId?: string): Promise<IMealEntryResponsePayload[]> {
-    let targetPeriodId = periodId;
+  static async getMealsByPeriod(filters?: IMealFilterRequest): Promise<IMealEntry[]> {
+    let targetPeriodId = filters?.periodId;
 
     if (!targetPeriodId) {
       const activePeriod = await prisma.period.findFirst({
@@ -18,7 +18,10 @@ export class MealService {
     }
 
     return prisma.mealEntry.findMany({
-      where: { periodId: targetPeriodId },
+      where: {
+        periodId: targetPeriodId,
+        ...(filters?.memberId && { memberId: filters.memberId }),
+      },
       include: {
         member: {
           select: { id: true, name: true },
@@ -28,11 +31,7 @@ export class MealService {
     });
   }
 
-  static async upsertMeal(
-    memberId: string,
-    dateStr: string,
-    payload: IUpsertMealPayload
-  ): Promise<IMealEntryResponsePayload> {
+  static async upsertMeal(memberId: string, dateStr: string, payload: IMealUpsert): Promise<IMealEntry> {
     const period = await prisma.period.findUnique({
       where: { id: payload.periodId },
     });

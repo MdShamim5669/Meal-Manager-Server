@@ -2,11 +2,21 @@ import { Response, NextFunction } from "express";
 import { MemberService } from "./member.service";
 import { memberValidation } from "./member.validation";
 import { AuthenticatedRequest } from "../../middlewares/auth.middleware";
+import { Role } from "@prisma/client";
 
 export class MemberController {
-  static async getAllMembers(_req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  static async getAllMembers(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const members = await MemberService.getAllMembers();
+      const searchTerm = req.query.searchTerm as string | undefined;
+      const role = req.query.role as Role | undefined;
+      const active = req.query.active !== undefined ? req.query.active === "true" : undefined;
+
+      const members = await MemberService.getAllMembers({
+        searchTerm,
+        role,
+        active,
+      });
+
       res.json(members);
     } catch (error) {
       next(error);

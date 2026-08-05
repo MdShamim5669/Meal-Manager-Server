@@ -1,5 +1,5 @@
 import { prisma } from "../../config/db";
-import { ISetupPayload, ILoginPayload, IAuthResponse, ICurrentMemberPayload } from "./auth.interface";
+import { IAuthSetup, IAuthLogin, IAuthResponse, ICurrentMember } from "./auth.interface";
 import { hashPin, comparePin } from "../../utils/hash.util";
 import { generateToken } from "../../utils/jwt.util";
 import { BadRequestError } from "../../errors/BadRequestError";
@@ -7,7 +7,7 @@ import { UnauthorizedError } from "../../errors/UnauthorizedError";
 import { NotFoundError } from "../../errors/NotFoundError";
 
 export class AuthService {
-  static async setup(payload: ISetupPayload): Promise<IAuthResponse> {
+  static async setup(payload: IAuthSetup): Promise<IAuthResponse> {
     const memberCount = await prisma.member.count();
     if (memberCount > 0) {
       throw new BadRequestError("System setup already completed. Manager already exists.");
@@ -59,7 +59,7 @@ export class AuthService {
     };
   }
 
-  static async login(payload: ILoginPayload): Promise<IAuthResponse> {
+  static async login(payload: IAuthLogin): Promise<IAuthResponse> {
     const member = await prisma.member.findUnique({
       where: { id: payload.memberId },
     });
@@ -89,7 +89,7 @@ export class AuthService {
     };
   }
 
-  static async getMe(memberId: string): Promise<ICurrentMemberPayload> {
+  static async getMe(memberId: string): Promise<ICurrentMember> {
     const member = await prisma.member.findUnique({
       where: { id: memberId },
       select: {
