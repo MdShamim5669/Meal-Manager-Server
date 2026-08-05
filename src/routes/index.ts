@@ -7,6 +7,7 @@ import expenseRoutes from "../modules/expense/expense.route";
 import depositRoutes from "../modules/deposit/deposit.route";
 import rosterRoutes from "../modules/roster/roster.route";
 import periodRoutes from "../modules/period/period.route";
+import dashboardRoutes from "../modules/dashboard/dashboard.route";
 
 const router = Router();
 
@@ -18,6 +19,7 @@ const moduleRoutes: { path: string; route: Router }[] = [
   { path: "/deposits", route: depositRoutes },
   { path: "/roster", route: rosterRoutes },
   { path: "/period", route: periodRoutes },
+  { path: "/dashboard", route: dashboardRoutes },
 ];
 
 moduleRoutes.forEach((route) => {
