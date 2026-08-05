@@ -1,6 +1,30 @@
+import { Server } from "http";
 import app from "./app";
-import { env } from "./config/env";
+import config from "./config";
 
-app.listen(env.PORT, () => {
-  console.log(`Meal Manager API listening on port ${env.PORT}`);
-});
+async function main() {
+  const server: Server = app.listen(config.port, () => {
+    console.log(`Server is running on port ${config.port}`);
+  });
+
+  const exitHandler = () => {
+    if (server) {
+      server.close(() => {
+        console.info("Server closed!");
+      });
+    }
+    process.exit(1);
+  };
+
+  process.on("uncaughtException", (error) => {
+    console.error("Uncaught Exception detected:", error);
+    exitHandler();
+  });
+
+  process.on("unhandledRejection", (error) => {
+    console.error("Unhandled Rejection detected:", error);
+    exitHandler();
+  });
+}
+
+main();
