@@ -1,41 +1,40 @@
-import { Response, NextFunction } from "express";
+import { Response } from "express";
 import { MealService } from "./meal.service";
 import { mealValidation } from "./meal.validation";
+import { mealFilterableFields } from "./meal.constant";
 import { AuthenticatedRequest } from "../../middlewares/auth.middleware";
 import { ForbiddenError } from "../../errors/ForbiddenError";
+import { catchAsync, sendResponse, pick } from "../../shared";
 
 export class MealController {
-  static async getMeals(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const periodId = req.query.periodId as string | undefined;
-      const memberId = req.query.memberId as string | undefined;
-      const date = req.query.date as string | undefined;
+  static getMeals = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
+    const filters = pick(req.query, mealFilterableFields as any);
 
-      const meals = await MealService.getMealsByPeriod({
-        periodId,
-        memberId,
-        date,
-      });
+    const meals = await MealService.getMealsByPeriod(filters as any);
 
-      res.json(meals);
-    } catch (error) {
-      next(error);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Meal entries fetched successfully",
+      data: meals,
+    });
+  });
+
+  static upsertMeal = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
+    const { memberId, date } = req.params;
+
+    if (req.user!.role !== "MANAGER" && req.user!.memberId !== memberId) {
+      throw new ForbiddenError("You can only update your own daily meals");
     }
-  }
 
-  static async upsertMeal(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const { memberId, date } = req.params;
+    const parsed = mealValidation.upsertMealSchema.parse(req.body);
+    const result = await MealService.upsertMeal(memberId, date, parsed);
 
-      if (req.user!.role !== "MANAGER" && req.user!.memberId !== memberId) {
-        throw new ForbiddenError("You can only update your own daily meals");
-      }
-
-      const parsed = mealValidation.upsertMealSchema.parse(req.body);
-      const result = await MealService.upsertMeal(memberId, date, parsed);
-      res.json(result);
-    } catch (error) {
-      next(error);
-    }
-  }
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Meal entry saved successfully",
+      data: result,
+    });
+  });
 }

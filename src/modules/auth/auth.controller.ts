@@ -1,35 +1,42 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { authValidation } from "./auth.validation";
 import { AuthenticatedRequest } from "../../middlewares/auth.middleware";
+import { catchAsync, sendResponse } from "../../shared";
 
 export class AuthController {
-  static async setup(req: Request, res: Response, next: NextFunction) {
-    try {
-      const parsed = authValidation.setupSchema.parse(req.body);
-      const result = await AuthService.setup(parsed);
-      res.status(201).json(result);
-    } catch (error) {
-      next(error);
-    }
-  }
+  static setup = catchAsync(async (req: Request, res: Response) => {
+    const parsed = authValidation.setupSchema.parse(req.body);
+    const result = await AuthService.setup(parsed);
 
-  static async login(req: Request, res: Response, next: NextFunction) {
-    try {
-      const parsed = authValidation.loginSchema.parse(req.body);
-      const result = await AuthService.login(parsed);
-      res.json(result);
-    } catch (error) {
-      next(error);
-    }
-  }
+    sendResponse(res, {
+      statusCode: 201,
+      success: true,
+      message: "Initial Manager setup completed successfully",
+      data: result,
+    });
+  });
 
-  static async getMe(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const result = await AuthService.getMe(req.user!.memberId);
-      res.json(result);
-    } catch (error) {
-      next(error);
-    }
-  }
+  static login = catchAsync(async (req: Request, res: Response) => {
+    const parsed = authValidation.loginSchema.parse(req.body);
+    const result = await AuthService.login(parsed);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Logged in successfully",
+      data: result,
+    });
+  });
+
+  static getMe = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
+    const result = await AuthService.getMe(req.user!.memberId);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "User profile fetched successfully",
+      data: result,
+    });
+  });
 }

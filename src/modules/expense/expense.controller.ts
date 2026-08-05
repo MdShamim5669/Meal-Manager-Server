@@ -1,58 +1,58 @@
-import { Response, NextFunction } from "express";
+import { Response } from "express";
 import { ExpenseService } from "./expense.service";
 import { expenseValidation } from "./expense.validation";
+import { expenseFilterableFields } from "./expense.constant";
 import { AuthenticatedRequest } from "../../middlewares/auth.middleware";
-import { ExpenseCategory } from "@prisma/client";
+import { catchAsync, sendResponse, pick } from "../../shared";
 
 export class ExpenseController {
-  static async getExpenses(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const periodId = req.query.periodId as string | undefined;
-      const category = req.query.category as ExpenseCategory | undefined;
-      const paidBy = req.query.paidBy as string | undefined;
-      const searchTerm = req.query.searchTerm as string | undefined;
+  static getExpenses = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
+    const filters = pick(req.query, expenseFilterableFields as any);
 
-      const expenses = await ExpenseService.getExpensesByPeriod({
-        periodId,
-        category,
-        paidBy,
-        searchTerm,
-      });
+    const expenses = await ExpenseService.getExpensesByPeriod(filters as any);
 
-      res.json(expenses);
-    } catch (error) {
-      next(error);
-    }
-  }
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Expenses fetched successfully",
+      data: expenses,
+    });
+  });
 
-  static async createExpense(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const parsed = expenseValidation.createExpenseSchema.parse(req.body);
-      const result = await ExpenseService.createExpense(parsed);
-      res.status(201).json(result);
-    } catch (error) {
-      next(error);
-    }
-  }
+  static createExpense = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
+    const parsed = expenseValidation.createExpenseSchema.parse(req.body);
+    const result = await ExpenseService.createExpense(parsed);
 
-  static async updateExpense(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const { id } = req.params;
-      const parsed = expenseValidation.updateExpenseSchema.parse(req.body);
-      const result = await ExpenseService.updateExpense(id, parsed);
-      res.json(result);
-    } catch (error) {
-      next(error);
-    }
-  }
+    sendResponse(res, {
+      statusCode: 201,
+      success: true,
+      message: "Expense record created successfully",
+      data: result,
+    });
+  });
 
-  static async deleteExpense(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      const { id } = req.params;
-      await ExpenseService.deleteExpense(id);
-      res.json({ message: "Expense record deleted successfully" });
-    } catch (error) {
-      next(error);
-    }
-  }
+  static updateExpense = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const parsed = expenseValidation.updateExpenseSchema.parse(req.body);
+    const result = await ExpenseService.updateExpense(id, parsed);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Expense record updated successfully",
+      data: result,
+    });
+  });
+
+  static deleteExpense = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    await ExpenseService.deleteExpense(id);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Expense record deleted successfully",
+      data: null,
+    });
+  });
 }
