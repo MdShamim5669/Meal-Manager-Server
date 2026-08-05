@@ -1,21 +1,11 @@
-import "dotenv/config";
-import { z } from "zod";
-
-const envSchema = z.object({
-  PORT: z.string().default("5000"),
-  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
-  JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
-  CORS_ORIGIN: z.string().min(1, "CORS_ORIGIN is required"),
-});
-
-const parsed = envSchema.safeParse(process.env);
-
-if (!parsed.success) {
-  console.error("Invalid environment variables:", parsed.error.format());
-  process.exit(1);
-}
+import config from "./index";
 
 export const env = {
-  ...parsed.data,
-  PORT: Number(parsed.data.PORT),
+  PORT: config.port,
+  DATABASE_URL: config.db_url,
+  JWT_SECRET: config.jwt.jwt_secret,
+  CORS_ORIGIN: config.cors_origin,
+  EXPIRES_IN: config.jwt.expires_in,
 };
+
+export default config;
