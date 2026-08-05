@@ -1,9 +1,13 @@
 export class AppError extends Error {
   public readonly statusCode: number;
 
-  constructor(message: string, statusCode = 500) {
+  constructor(statusCode: number, message: string, stack = "") {
     super(message);
     this.statusCode = statusCode;
-    Object.setPrototypeOf(this, new.target.prototype);
+    if (stack) {
+      this.stack = stack;
+    } else {
+      Error.captureStackTrace(this, this.constructor);
+    }
   }
 }
