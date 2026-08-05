@@ -1,23 +1,47 @@
-import express from "express";
+import express, { Application, NextFunction, Request, Response } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { env } from "./config/env";
 import router from "./routes";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import { CronService } from "./cron/cron.service";
 
-const app = express();
+const app: Application = express();
 
-app.use(cors({ origin: env.CORS_ORIGIN }));
+app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(cookieParser());
+
+// Parsers
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint
-app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, message: "Meal Manager API is healthy" });
+// Initialize scheduled Cron Jobs
+CronService.initCrons();
+
+// Root Route
+app.get("/", (_req: Request, res: Response) => {
+  res.send({
+    message: "Meal Manager Backend API Server is running..",
+  });
 });
 
-// Centralized Application Routes
+// API Routes
+app.use("/api/v1", router);
 app.use("/api", router);
 
-// Centralized Error Handler Middleware
+// Global Error Handler
 app.use(errorMiddleware);
+
+// 404 Not Found Handler
+app.use((req: Request, res: Response, _next: NextFunction) => {
+  res.status(404).json({
+    success: false,
+    message: "API NOT FOUND!",
+    error: {
+      path: req.originalUrl,
+      message: "Your requested path is not found!",
+    },
+  });
+});
 
 export default app;
