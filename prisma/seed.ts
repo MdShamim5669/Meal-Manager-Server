@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 async function main() {
-  const pinHash = await bcrypt.hash("1234", 10);
+  const pinHash = await bcrypt.hash("5669", 10);
   const email = "tamjidulislamsamim@gmail.com";
   const phone = "01743597989";
   const name = "Md Samim";
@@ -47,7 +47,7 @@ async function main() {
   console.log(`Email:    ${superAdmin.email}`);
   console.log(`Phone:    ${superAdmin.phone}`);
   console.log(`Role:     ${superAdmin.role}`);
-  console.log(`PIN:      1234`);
+  console.log(`PIN:      5669`);
   console.log("=========================================\n");
 
   const activePeriod = await prisma.period.findFirst({ where: { status: "ACTIVE" } });
