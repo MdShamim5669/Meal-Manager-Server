@@ -1,6 +1,8 @@
 model Member {
   id                  String    @id @default(uuid())
   name                String
+  email               String?   @unique
+  phone               String?   @unique
   pinHash             String
   role                Role      @default(MEMBER)
   active              Boolean   @default(true)

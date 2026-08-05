@@ -6,8 +6,13 @@
     "dev": "ts-node-dev --respawn src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "seed": "ts-node prisma/seed.ts",
+    "prisma:seed": "prisma db seed",
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
