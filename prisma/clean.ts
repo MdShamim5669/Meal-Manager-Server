@@ -22,33 +22,23 @@ async function cleanDatabase() {
   const deletedPeriods = await prisma.period.deleteMany({});
   console.log(`Deleted ${deletedPeriods.count} periods.`);
 
-  // 3. Delete non-Super Admin members
+  // 3. Delete non-Super Admin members (by role)
   const deletedMembers = await prisma.member.deleteMany({
     where: {
-      AND: [
-        { role: { not: Role.SUPER_ADMIN } },
-        { email: { not: "tamjidulislamsamim@gmail.com" } },
-      ],
+      role: { not: Role.SUPER_ADMIN },
     },
   });
   console.log(`Deleted ${deletedMembers.count} non-Super Admin members.`);
 
-  // 4. Verify Super Admin exists
-  const superAdmins = await prisma.member.findMany({
-    where: {
-      OR: [
-        { role: Role.SUPER_ADMIN },
-        { email: "tamjidulislamsamim@gmail.com" },
-      ],
-    },
-  });
+  // 4. Verify remaining Super Admin
+  const remainingMembers = await prisma.member.findMany();
 
   console.log("\n=========================================");
   console.log("✅ DATABASE CLEANUP COMPLETE!");
   console.log("=========================================");
-  console.log(`Remaining Super Admin accounts: ${superAdmins.length}`);
-  superAdmins.forEach((sa) => {
-    console.log(`- ID: ${sa.id} | Name: ${sa.name} | Role: ${sa.role}`);
+  console.log(`Remaining members in DB: ${remainingMembers.length}`);
+  remainingMembers.forEach((m) => {
+    console.log(`- ID: ${m.id} | Name: ${m.name} | Role: ${m.role} | Email: ${m.email}`);
   });
   console.log("=========================================\n");
 }
