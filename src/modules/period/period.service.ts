@@ -1,12 +1,20 @@
 import { prisma } from "../../config/db";
-import { IClosePeriodPayload, IDebtSettlementTransferPayload, IDashboardResponsePayload } from "./period.interface";
+import {
+  IClosePeriodPayload,
+  IDebtSettlementTransfer,
+  IMemberBalance,
+  IDashboardResponse,
+  IPersonalDashboard,
+  IManagerDashboardExtra,
+} from "./period.interface";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { BadRequestError } from "../../errors/BadRequestError";
+import { Role } from "@prisma/client";
 
 export class PeriodService {
   static computeSettlements(
     balances: { memberId: string; name: string; balance: number }[]
-  ): IDebtSettlementTransferPayload[] {
+  ): IDebtSettlementTransfer[] {
     const debtors = balances
       .filter((b) => b.balance < -0.01)
       .map((b) => ({ ...b, amount: Math.abs(b.balance) }))
@@ -17,7 +25,7 @@ export class PeriodService {
       .map((b) => ({ ...b, amount: b.balance }))
       .sort((a, b) => b.amount - a.amount);
 
-    const transfers: IDebtSettlementTransferPayload[] = [];
+    const transfers: IDebtSettlementTransfer[] = [];
 
     let i = 0;
     let j = 0;
@@ -48,7 +56,10 @@ export class PeriodService {
     return transfers;
   }
 
-  static async getDashboardData(periodId?: string): Promise<IDashboardResponsePayload> {
+  static async getDashboardData(
+    user: { memberId: string; role: Role },
+    periodId?: string
+  ): Promise<IDashboardResponse> {
     let targetPeriod: { id: string; label: string; startDate: Date; endDate: Date; status: "ACTIVE" | "CLOSED" } | null =
       null;
 
@@ -79,7 +90,7 @@ export class PeriodService {
 
     const mealRate = totalMeals > 0 ? Math.round((totalExpenses / totalMeals) * 100) / 100 : 0;
 
-    const memberBalances = members.map((member) => {
+    const memberBalances: IMemberBalance[] = members.map((member) => {
       const memberTotalMeals = meals
         .filter((m) => m.memberId === member.id)
         .reduce((sum, m) => sum + m.mealCount, 0);
@@ -91,6 +102,10 @@ export class PeriodService {
       const individualCost = Math.round(memberTotalMeals * mealRate * 100) / 100;
       const balance = Math.round((memberDeposit - individualCost) * 100) / 100;
 
+      let status: "OWED" | "OWES" | "SETTLED" = "SETTLED";
+      if (balance > 0.01) status = "OWED";
+      else if (balance < -0.01) status = "OWES";
+
       return {
         memberId: member.id,
         name: member.name,
@@ -99,6 +114,7 @@ export class PeriodService {
         totalDeposit: memberDeposit,
         individualCost,
         balance,
+        status,
       };
     });
 
@@ -117,7 +133,52 @@ export class PeriodService {
       include: { member: { select: { id: true, name: true } } },
     });
 
+    const myBalanceObj = memberBalances.find((b) => b.memberId === user.memberId);
+    const myDutySchedule = await prisma.dutyRoster.findMany({
+      where: {
+        periodId: targetPeriod.id,
+        memberId: user.memberId,
+      },
+      select: {
+        id: true,
+        date: true,
+        status: true,
+      },
+      orderBy: { date: "asc" },
+    });
+
+    const mySettlements = settlements.filter(
+      (s) => s.fromId === user.memberId || s.toId === user.memberId
+    );
+
+    const personalSummary: IPersonalDashboard = {
+      myTotalMeals: myBalanceObj?.totalMeals || 0,
+      myTotalDeposit: myBalanceObj?.totalDeposit || 0,
+      myIndividualCost: myBalanceObj?.individualCost || 0,
+      myBalance: myBalanceObj?.balance || 0,
+      myStatus: myBalanceObj?.status || "SETTLED",
+      myDutySchedule,
+      mySettlements,
+    };
+
+    const marketExpense = expenses
+      .filter((e) => e.category === "MARKET")
+      .reduce((sum, e) => sum + e.amount, 0);
+    const utilityExpense = expenses
+      .filter((e) => e.category === "UTILITY")
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    const managerMetrics: IManagerDashboardExtra = {
+      expenseCategoryBreakdown: {
+        marketExpense,
+        utilityExpense,
+      },
+      unsettledDebtorsCount: memberBalances.filter((b) => b.status === "OWES").length,
+      unsettledCreditorsCount: memberBalances.filter((b) => b.status === "OWED").length,
+    };
+
     return {
+      role: user.role,
       period: targetPeriod,
       summary: {
         totalMeals,
@@ -128,6 +189,8 @@ export class PeriodService {
       memberBalances,
       settlements,
       todaysDuty,
+      personalSummary,
+      ...(user.role === "MANAGER" && { managerMetrics }),
     };
   }
 

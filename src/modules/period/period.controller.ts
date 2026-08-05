@@ -7,7 +7,12 @@ export class PeriodController {
   static async getDashboard(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const periodId = req.query.periodId as string | undefined;
-      const dashboardData = await PeriodService.getDashboardData(periodId);
+      const user = {
+        memberId: req.user!.memberId,
+        role: req.user!.role,
+      };
+
+      const dashboardData = await PeriodService.getDashboardData(user, periodId);
       res.json(dashboardData);
     } catch (error) {
       next(error);
