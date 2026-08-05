@@ -1,0 +1,20 @@
+enum Role {
+  MANAGER
+  MEMBER
+}
+
+enum ExpenseCategory {
+  MARKET
+  UTILITY
+}
+
+enum DutyStatus {
+  SCHEDULED
+  DONE
+  MISSED
+}
+
+enum PeriodStatus {
+  ACTIVE
+  CLOSED
+}

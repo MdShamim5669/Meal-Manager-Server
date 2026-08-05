@@ -1,0 +1,16 @@
+model Period {
+  id        String       @id @default(uuid())
+  label     String
+  startDate DateTime
+  endDate   DateTime
+  status    PeriodStatus @default(ACTIVE)
+
+  totalMeals   Float?
+  totalExpense Float?
+  mealRate     Float?
+
+  meals      MealEntry[]
+  expenses   Expense[]
+  deposits   Deposit[]
+  dutyRoster DutyRoster[]
+}

@@ -1,0 +1,13 @@
+model Expense {
+  id           String          @id @default(uuid())
+  date         DateTime
+  category     ExpenseCategory
+  amount       Float
+  paidBy       String
+  description  String?
+  receiptPhoto String?
+  periodId     String
+
+  member Member @relation(fields: [paidBy], references: [id])
+  period Period @relation(fields: [periodId], references: [id])
+}

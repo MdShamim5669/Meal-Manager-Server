@@ -1,0 +1,10 @@
+model Deposit {
+  id       String   @id @default(uuid())
+  memberId String
+  date     DateTime
+  amount   Float
+  periodId String
+
+  member Member @relation(fields: [memberId], references: [id])
+  period Period @relation(fields: [periodId], references: [id])
+}

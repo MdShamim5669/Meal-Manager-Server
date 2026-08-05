@@ -1,0 +1,13 @@
+model Member {
+  id         String   @id @default(uuid())
+  name       String
+  pinHash    String
+  role       Role     @default(MEMBER)
+  active     Boolean  @default(true)
+  joinedDate DateTime @default(now())
+
+  meals      MealEntry[]
+  expenses   Expense[]
+  deposits   Deposit[]
+  dutyRoster DutyRoster[]
+}

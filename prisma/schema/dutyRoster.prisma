@@ -1,0 +1,11 @@
+model DutyRoster {
+  id       String     @id @default(uuid())
+  memberId String
+  date     DateTime
+  status   DutyStatus @default(SCHEDULED)
+  doneAt   DateTime?
+  periodId String
+
+  member Member @relation(fields: [memberId], references: [id])
+  period Period @relation(fields: [periodId], references: [id])
+}

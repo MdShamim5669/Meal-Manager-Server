@@ -1,0 +1,12 @@
+model MealEntry {
+  id        String   @id @default(uuid())
+  memberId  String
+  date      DateTime
+  mealCount Float
+  periodId  String
+
+  member Member @relation(fields: [memberId], references: [id])
+  period Period @relation(fields: [periodId], references: [id])
+
+  @@unique([memberId, date])
+}
