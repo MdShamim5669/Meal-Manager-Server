@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import { ExpenseService } from "./expense.service";
-import { createExpenseSchema, updateExpenseSchema } from "./expense.interface";
+import { expenseValidation } from "./expense.validation";
 import { AuthenticatedRequest } from "../../middlewares/auth.middleware";
 
 export class ExpenseController {
@@ -16,7 +16,7 @@ export class ExpenseController {
 
   static async createExpense(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const parsed = createExpenseSchema.parse(req.body);
+      const parsed = expenseValidation.createExpenseSchema.parse(req.body);
       const result = await ExpenseService.createExpense(parsed);
       res.status(201).json(result);
     } catch (error) {
@@ -27,7 +27,7 @@ export class ExpenseController {
   static async updateExpense(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const parsed = updateExpenseSchema.parse(req.body);
+      const parsed = expenseValidation.updateExpenseSchema.parse(req.body);
       const result = await ExpenseService.updateExpense(id, parsed);
       res.json(result);
     } catch (error) {

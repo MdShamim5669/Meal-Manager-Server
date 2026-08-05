@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import { RosterService } from "./roster.service";
-import { createDutySchema, updateDutySchema } from "./roster.interface";
+import { rosterValidation } from "./roster.validation";
 import { AuthenticatedRequest } from "../../middlewares/auth.middleware";
 import { ForbiddenError } from "../../errors/ForbiddenError";
 import { prisma } from "../../config/db";
@@ -18,7 +18,7 @@ export class RosterController {
 
   static async createDuty(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const parsed = createDutySchema.parse(req.body);
+      const parsed = rosterValidation.createDutySchema.parse(req.body);
       const result = await RosterService.createDuty(parsed);
       res.status(201).json(result);
     } catch (error) {
@@ -35,7 +35,7 @@ export class RosterController {
         throw new ForbiddenError("You can only update your own duty roster status");
       }
 
-      const parsed = updateDutySchema.parse(req.body);
+      const parsed = rosterValidation.updateDutySchema.parse(req.body);
       const result = await RosterService.updateDuty(id, parsed);
       res.json(result);
     } catch (error) {

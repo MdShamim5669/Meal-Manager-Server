@@ -1,10 +1,10 @@
 import { prisma } from "../../config/db";
-import { UpsertMealInput } from "./meal.interface";
+import { IUpsertMealPayload, IMealEntryResponsePayload } from "./meal.interface";
 import { BadRequestError } from "../../errors/BadRequestError";
 import { NotFoundError } from "../../errors/NotFoundError";
 
 export class MealService {
-  static async getMealsByPeriod(periodId?: string) {
+  static async getMealsByPeriod(periodId?: string): Promise<IMealEntryResponsePayload[]> {
     let targetPeriodId = periodId;
 
     if (!targetPeriodId) {
@@ -28,9 +28,13 @@ export class MealService {
     });
   }
 
-  static async upsertMeal(memberId: string, dateStr: string, input: UpsertMealInput) {
+  static async upsertMeal(
+    memberId: string,
+    dateStr: string,
+    payload: IUpsertMealPayload
+  ): Promise<IMealEntryResponsePayload> {
     const period = await prisma.period.findUnique({
-      where: { id: input.periodId },
+      where: { id: payload.periodId },
     });
 
     if (!period) {
@@ -51,14 +55,14 @@ export class MealService {
         },
       },
       update: {
-        mealCount: input.mealCount,
-        periodId: input.periodId,
+        mealCount: payload.mealCount,
+        periodId: payload.periodId,
       },
       create: {
         memberId,
         date,
-        mealCount: input.mealCount,
-        periodId: input.periodId,
+        mealCount: payload.mealCount,
+        periodId: payload.periodId,
       },
     });
   }

@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import { DepositService } from "./deposit.service";
-import { createDepositSchema } from "./deposit.interface";
+import { depositValidation } from "./deposit.validation";
 import { AuthenticatedRequest } from "../../middlewares/auth.middleware";
 
 export class DepositController {
@@ -16,7 +16,7 @@ export class DepositController {
 
   static async createDeposit(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const parsed = createDepositSchema.parse(req.body);
+      const parsed = depositValidation.createDepositSchema.parse(req.body);
       const result = await DepositService.createDeposit(parsed);
       res.status(201).json(result);
     } catch (error) {

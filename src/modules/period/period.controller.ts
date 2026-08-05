@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import { PeriodService } from "./period.service";
-import { closePeriodSchema } from "./period.interface";
+import { periodValidation } from "./period.validation";
 import { AuthenticatedRequest } from "../../middlewares/auth.middleware";
 
 export class PeriodController {
@@ -35,7 +35,7 @@ export class PeriodController {
 
   static async closePeriod(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const parsed = closePeriodSchema.parse(req.body);
+      const parsed = periodValidation.closePeriodSchema.parse(req.body);
       const result = await PeriodService.closePeriod(parsed);
       res.json(result);
     } catch (error) {

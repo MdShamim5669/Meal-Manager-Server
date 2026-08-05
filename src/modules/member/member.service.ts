@@ -1,10 +1,10 @@
 import { prisma } from "../../config/db";
-import { CreateMemberInput, UpdateMemberInput } from "./member.interface";
+import { ICreateMemberPayload, IUpdateMemberPayload, IMemberResponsePayload } from "./member.interface";
 import { hashPin } from "../../utils/hash.util";
 import { NotFoundError } from "../../errors/NotFoundError";
 
 export class MemberService {
-  static async getAllMembers() {
+  static async getAllMembers(): Promise<IMemberResponsePayload[]> {
     return prisma.member.findMany({
       select: {
         id: true,
@@ -17,14 +17,14 @@ export class MemberService {
     });
   }
 
-  static async createMember(input: CreateMemberInput) {
-    const pinHash = await hashPin(input.pin);
+  static async createMember(payload: ICreateMemberPayload): Promise<IMemberResponsePayload> {
+    const pinHash = await hashPin(payload.pin);
 
     return prisma.member.create({
       data: {
-        name: input.name,
+        name: payload.name,
         pinHash,
-        role: input.role,
+        role: payload.role,
         active: true,
       },
       select: {
@@ -37,7 +37,7 @@ export class MemberService {
     });
   }
 
-  static async updateMember(id: string, input: UpdateMemberInput) {
+  static async updateMember(id: string, payload: IUpdateMemberPayload): Promise<IMemberResponsePayload> {
     const existing = await prisma.member.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundError("Member not found");
@@ -45,7 +45,7 @@ export class MemberService {
 
     return prisma.member.update({
       where: { id },
-      data: input,
+      data: payload,
       select: {
         id: true,
         name: true,

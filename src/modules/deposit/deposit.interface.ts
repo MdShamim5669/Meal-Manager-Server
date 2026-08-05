@@ -1,10 +1,18 @@
 import { z } from "zod";
-
-export const createDepositSchema = z.object({
-  memberId: z.string().min(1, "Member ID is required"),
-  date: z.string().or(z.date()),
-  amount: z.number().positive("Amount must be greater than 0"),
-  periodId: z.string().min(1, "Period ID is required"),
-});
+import { createDepositSchema } from "./deposit.validation";
 
 export type CreateDepositInput = z.infer<typeof createDepositSchema>;
+
+export interface ICreateDepositPayload extends CreateDepositInput {}
+
+export interface IDepositResponsePayload {
+  id: string;
+  memberId: string;
+  date: Date;
+  amount: number;
+  periodId: string;
+  member?: {
+    id: string;
+    name: string;
+  };
+}

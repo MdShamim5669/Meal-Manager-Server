@@ -1,5 +1,5 @@
 import { prisma } from "../../config/db";
-import { SetupInput, LoginInput } from "./auth.interface";
+import { ISetupPayload, ILoginPayload, IAuthResponse, ICurrentMemberPayload } from "./auth.interface";
 import { hashPin, comparePin } from "../../utils/hash.util";
 import { generateToken } from "../../utils/jwt.util";
 import { BadRequestError } from "../../errors/BadRequestError";
@@ -7,17 +7,17 @@ import { UnauthorizedError } from "../../errors/UnauthorizedError";
 import { NotFoundError } from "../../errors/NotFoundError";
 
 export class AuthService {
-  static async setup(input: SetupInput) {
+  static async setup(payload: ISetupPayload): Promise<IAuthResponse> {
     const memberCount = await prisma.member.count();
     if (memberCount > 0) {
       throw new BadRequestError("System setup already completed. Manager already exists.");
     }
 
-    const hashedPin = await hashPin(input.pin);
+    const hashedPin = await hashPin(payload.pin);
 
     const manager = await prisma.member.create({
       data: {
-        name: input.name,
+        name: payload.name,
         pinHash: hashedPin,
         role: "MANAGER",
         active: true,
@@ -26,7 +26,7 @@ export class AuthService {
 
     const now = new Date();
     const periodLabel =
-      input.periodLabel || `${now.toLocaleString("default", { month: "long" })} ${now.getFullYear()}`;
+      payload.periodLabel || `${now.toLocaleString("default", { month: "long" })} ${now.getFullYear()}`;
 
     const activePeriod = await prisma.period.findFirst({ where: { status: "ACTIVE" } });
     if (!activePeriod) {
@@ -59,16 +59,16 @@ export class AuthService {
     };
   }
 
-  static async login(input: LoginInput) {
+  static async login(payload: ILoginPayload): Promise<IAuthResponse> {
     const member = await prisma.member.findUnique({
-      where: { id: input.memberId },
+      where: { id: payload.memberId },
     });
 
     if (!member || !member.active) {
       throw new NotFoundError("Member not found or inactive");
     }
 
-    const isMatch = await comparePin(input.pin, member.pinHash);
+    const isMatch = await comparePin(payload.pin, member.pinHash);
     if (!isMatch) {
       throw new UnauthorizedError("Invalid PIN");
     }
@@ -89,7 +89,7 @@ export class AuthService {
     };
   }
 
-  static async getMe(memberId: string) {
+  static async getMe(memberId: string): Promise<ICurrentMemberPayload> {
     const member = await prisma.member.findUnique({
       where: { id: memberId },
       select: {

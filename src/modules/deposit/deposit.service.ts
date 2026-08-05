@@ -1,10 +1,10 @@
 import { prisma } from "../../config/db";
-import { CreateDepositInput } from "./deposit.interface";
+import { ICreateDepositPayload, IDepositResponsePayload } from "./deposit.interface";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { BadRequestError } from "../../errors/BadRequestError";
 
 export class DepositService {
-  static async getDepositsByPeriod(periodId?: string) {
+  static async getDepositsByPeriod(periodId?: string): Promise<IDepositResponsePayload[]> {
     let targetPeriodId = periodId;
 
     if (!targetPeriodId) {
@@ -28,9 +28,9 @@ export class DepositService {
     });
   }
 
-  static async createDeposit(input: CreateDepositInput) {
+  static async createDeposit(payload: ICreateDepositPayload): Promise<IDepositResponsePayload> {
     const period = await prisma.period.findUnique({
-      where: { id: input.periodId },
+      where: { id: payload.periodId },
     });
 
     if (!period) {
@@ -43,10 +43,10 @@ export class DepositService {
 
     return prisma.deposit.create({
       data: {
-        memberId: input.memberId,
-        date: new Date(input.date),
-        amount: input.amount,
-        periodId: input.periodId,
+        memberId: payload.memberId,
+        date: new Date(payload.date),
+        amount: payload.amount,
+        periodId: payload.periodId,
       },
       include: {
         member: { select: { id: true, name: true } },

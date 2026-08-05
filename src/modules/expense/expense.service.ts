@@ -1,10 +1,10 @@
 import { prisma } from "../../config/db";
-import { CreateExpenseInput, UpdateExpenseInput } from "./expense.interface";
+import { ICreateExpensePayload, IUpdateExpensePayload, IExpenseResponsePayload } from "./expense.interface";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { BadRequestError } from "../../errors/BadRequestError";
 
 export class ExpenseService {
-  static async getExpensesByPeriod(periodId?: string) {
+  static async getExpensesByPeriod(periodId?: string): Promise<IExpenseResponsePayload[]> {
     let targetPeriodId = periodId;
 
     if (!targetPeriodId) {
@@ -28,9 +28,9 @@ export class ExpenseService {
     });
   }
 
-  static async createExpense(input: CreateExpenseInput) {
+  static async createExpense(payload: ICreateExpensePayload): Promise<IExpenseResponsePayload> {
     const period = await prisma.period.findUnique({
-      where: { id: input.periodId },
+      where: { id: payload.periodId },
     });
 
     if (!period) {
@@ -43,13 +43,13 @@ export class ExpenseService {
 
     return prisma.expense.create({
       data: {
-        date: new Date(input.date),
-        category: input.category,
-        amount: input.amount,
-        paidBy: input.paidBy,
-        description: input.description,
-        receiptPhoto: input.receiptPhoto,
-        periodId: input.periodId,
+        date: new Date(payload.date),
+        category: payload.category,
+        amount: payload.amount,
+        paidBy: payload.paidBy,
+        description: payload.description,
+        receiptPhoto: payload.receiptPhoto,
+        periodId: payload.periodId,
       },
       include: {
         member: { select: { id: true, name: true } },
@@ -57,7 +57,7 @@ export class ExpenseService {
     });
   }
 
-  static async updateExpense(id: string, input: UpdateExpenseInput) {
+  static async updateExpense(id: string, payload: IUpdateExpensePayload): Promise<IExpenseResponsePayload> {
     const existing = await prisma.expense.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundError("Expense record not found");
@@ -66,13 +66,13 @@ export class ExpenseService {
     return prisma.expense.update({
       where: { id },
       data: {
-        ...(input.date && { date: new Date(input.date) }),
-        ...(input.category && { category: input.category }),
-        ...(input.amount !== undefined && { amount: input.amount }),
-        ...(input.paidBy && { paidBy: input.paidBy }),
-        ...(input.description !== undefined && { description: input.description }),
-        ...(input.receiptPhoto !== undefined && { receiptPhoto: input.receiptPhoto }),
-        ...(input.periodId && { periodId: input.periodId }),
+        ...(payload.date && { date: new Date(payload.date) }),
+        ...(payload.category && { category: payload.category }),
+        ...(payload.amount !== undefined && { amount: payload.amount }),
+        ...(payload.paidBy && { paidBy: payload.paidBy }),
+        ...(payload.description !== undefined && { description: payload.description }),
+        ...(payload.receiptPhoto !== undefined && { receiptPhoto: payload.receiptPhoto }),
+        ...(payload.periodId && { periodId: payload.periodId }),
       },
       include: {
         member: { select: { id: true, name: true } },
@@ -80,12 +80,12 @@ export class ExpenseService {
     });
   }
 
-  static async deleteExpense(id: string) {
+  static async deleteExpense(id: string): Promise<void> {
     const existing = await prisma.expense.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundError("Expense record not found");
     }
 
-    return prisma.expense.delete({ where: { id } });
+    await prisma.expense.delete({ where: { id } });
   }
 }

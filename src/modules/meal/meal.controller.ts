@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import { MealService } from "./meal.service";
-import { upsertMealSchema } from "./meal.interface";
+import { mealValidation } from "./meal.validation";
 import { AuthenticatedRequest } from "../../middlewares/auth.middleware";
 import { ForbiddenError } from "../../errors/ForbiddenError";
 
@@ -23,7 +23,7 @@ export class MealController {
         throw new ForbiddenError("You can only update your own daily meals");
       }
 
-      const parsed = upsertMealSchema.parse(req.body);
+      const parsed = mealValidation.upsertMealSchema.parse(req.body);
       const result = await MealService.upsertMeal(memberId, date, parsed);
       res.json(result);
     } catch (error) {

@@ -1,10 +1,10 @@
 import { prisma } from "../../config/db";
-import { CreateDutyInput, UpdateDutyInput } from "./roster.interface";
+import { ICreateDutyPayload, IUpdateDutyPayload, IDutyRosterResponsePayload } from "./roster.interface";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { DutyStatus } from "@prisma/client";
 
 export class RosterService {
-  static async getRosterByPeriod(periodId?: string) {
+  static async getRosterByPeriod(periodId?: string): Promise<IDutyRosterResponsePayload[]> {
     let targetPeriodId = periodId;
 
     if (!targetPeriodId) {
@@ -26,12 +26,12 @@ export class RosterService {
     });
   }
 
-  static async createDuty(input: CreateDutyInput) {
+  static async createDuty(payload: ICreateDutyPayload): Promise<IDutyRosterResponsePayload> {
     return prisma.dutyRoster.create({
       data: {
-        memberId: input.memberId,
-        date: new Date(input.date),
-        periodId: input.periodId,
+        memberId: payload.memberId,
+        date: new Date(payload.date),
+        periodId: payload.periodId,
         status: "SCHEDULED",
       },
       include: {
@@ -40,24 +40,24 @@ export class RosterService {
     });
   }
 
-  static async updateDuty(id: string, input: UpdateDutyInput) {
+  static async updateDuty(id: string, payload: IUpdateDutyPayload): Promise<IDutyRosterResponsePayload> {
     const existing = await prisma.dutyRoster.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundError("Duty roster entry not found");
     }
 
     let doneAt = existing.doneAt;
-    if (input.status === "DONE" && existing.status !== "DONE") {
+    if (payload.status === "DONE" && existing.status !== "DONE") {
       doneAt = new Date();
-    } else if (input.status && input.status !== "DONE") {
+    } else if (payload.status && payload.status !== "DONE") {
       doneAt = null;
     }
 
     return prisma.dutyRoster.update({
       where: { id },
       data: {
-        ...(input.status && { status: input.status as DutyStatus }),
-        ...(input.memberId && { memberId: input.memberId }),
+        ...(payload.status && { status: payload.status as DutyStatus }),
+        ...(payload.memberId && { memberId: payload.memberId }),
         doneAt,
       },
       include: {

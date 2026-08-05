@@ -1,12 +1,12 @@
 import { prisma } from "../../config/db";
-import { ClosePeriodInput, DebtSettlementTransfer } from "./period.interface";
+import { IClosePeriodPayload, IDebtSettlementTransferPayload, IDashboardResponsePayload } from "./period.interface";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { BadRequestError } from "../../errors/BadRequestError";
 
 export class PeriodService {
   static computeSettlements(
     balances: { memberId: string; name: string; balance: number }[]
-  ): DebtSettlementTransfer[] {
+  ): IDebtSettlementTransferPayload[] {
     const debtors = balances
       .filter((b) => b.balance < -0.01)
       .map((b) => ({ ...b, amount: Math.abs(b.balance) }))
@@ -17,7 +17,7 @@ export class PeriodService {
       .map((b) => ({ ...b, amount: b.balance }))
       .sort((a, b) => b.amount - a.amount);
 
-    const transfers: DebtSettlementTransfer[] = [];
+    const transfers: IDebtSettlementTransferPayload[] = [];
 
     let i = 0;
     let j = 0;
@@ -48,8 +48,9 @@ export class PeriodService {
     return transfers;
   }
 
-  static async getDashboardData(periodId?: string) {
-    let targetPeriod: { id: string; label: string; startDate: Date; endDate: Date; status: string } | null = null;
+  static async getDashboardData(periodId?: string): Promise<IDashboardResponsePayload> {
+    let targetPeriod: { id: string; label: string; startDate: Date; endDate: Date; status: "ACTIVE" | "CLOSED" } | null =
+      null;
 
     if (periodId) {
       targetPeriod = await prisma.period.findUnique({ where: { id: periodId } });
@@ -144,9 +145,9 @@ export class PeriodService {
     return period;
   }
 
-  static async closePeriod(input: ClosePeriodInput) {
+  static async closePeriod(payload: IClosePeriodPayload) {
     const period = await prisma.period.findUnique({
-      where: { id: input.periodId },
+      where: { id: payload.periodId },
     });
 
     if (!period) {
@@ -183,7 +184,7 @@ export class PeriodService {
 
     const newPeriod = await prisma.period.create({
       data: {
-        label: input.nextPeriodLabel,
+        label: payload.nextPeriodLabel,
         startDate: nextStartDate,
         endDate: nextEndDate,
         status: "ACTIVE",

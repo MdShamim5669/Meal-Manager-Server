@@ -1,15 +1,22 @@
 import { z } from "zod";
-
-export const createDutySchema = z.object({
-  memberId: z.string().min(1, "Member ID is required"),
-  date: z.string().or(z.date()),
-  periodId: z.string().min(1, "Period ID is required"),
-});
-
-export const updateDutySchema = z.object({
-  status: z.enum(["SCHEDULED", "DONE", "MISSED"]).optional(),
-  memberId: z.string().optional(),
-});
+import { createDutySchema, updateDutySchema } from "./roster.validation";
+import { DutyStatus } from "@prisma/client";
 
 export type CreateDutyInput = z.infer<typeof createDutySchema>;
 export type UpdateDutyInput = z.infer<typeof updateDutySchema>;
+
+export interface ICreateDutyPayload extends CreateDutyInput {}
+export interface IUpdateDutyPayload extends UpdateDutyInput {}
+
+export interface IDutyRosterResponsePayload {
+  id: string;
+  memberId: string;
+  date: Date;
+  status: DutyStatus;
+  doneAt: Date | null;
+  periodId: string;
+  member?: {
+    id: string;
+    name: string;
+  };
+}

@@ -1,15 +1,26 @@
 import { z } from "zod";
-
-export const setupSchema = z.object({
-  name: z.string().min(1, "Manager name is required"),
-  pin: z.string().min(4, "PIN must be at least 4 digits"),
-  periodLabel: z.string().optional(),
-});
-
-export const loginSchema = z.object({
-  memberId: z.string().min(1, "Member ID is required"),
-  pin: z.string().min(1, "PIN is required"),
-});
+import { setupSchema, loginSchema } from "./auth.validation";
+import { Role } from "@prisma/client";
 
 export type SetupInput = z.infer<typeof setupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+
+export interface ISetupPayload extends SetupInput {}
+export interface ILoginPayload extends LoginInput {}
+
+export interface IAuthResponse {
+  token: string;
+  member: {
+    id: string;
+    name: string;
+    role: Role;
+  };
+}
+
+export interface ICurrentMemberPayload {
+  id: string;
+  name: string;
+  role: Role;
+  active: boolean;
+  joinedDate: Date;
+}
