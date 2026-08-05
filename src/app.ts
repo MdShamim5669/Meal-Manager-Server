@@ -27,7 +27,6 @@ app.get("/", (_req: Request, res: Response) => {
 
 // API Routes
 app.use("/api/v1", router);
-app.use("/api", router);
 
 // Global Error Handler
 app.use(errorMiddleware);
