@@ -20,8 +20,7 @@ export class ExpenseController {
   });
 
   static createExpense = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
-    const parsed = expenseValidation.createExpenseSchema.parse(req.body);
-    const result = await ExpenseService.createExpense(parsed);
+    const result = await ExpenseService.createExpense(req.body);
 
     sendResponse(res, {
       statusCode: 201,
@@ -33,8 +32,7 @@ export class ExpenseController {
 
   static updateExpense = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const parsed = expenseValidation.updateExpenseSchema.parse(req.body);
-    const result = await ExpenseService.updateExpense(id, parsed);
+    const result = await ExpenseService.updateExpense(id, req.body);
 
     sendResponse(res, {
       statusCode: 200,

@@ -1,9 +1,14 @@
 import { z } from "zod";
 import { createDepositSchema } from "./deposit.validation";
 
-export type CreateDepositInput = z.infer<typeof createDepositSchema>;
+export type CreateDepositInput = z.infer<typeof createDepositSchema>["body"];
 
-export interface ICreateDepositPayload extends CreateDepositInput {}
+export type ICreateDepositPayload = {
+  memberId: string;
+  date?: string | Date | undefined;
+  amount: number;
+  periodId?: string | undefined;
+};
 
 export interface IDepositResponsePayload {
   id: string;

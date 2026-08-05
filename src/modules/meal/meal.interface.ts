@@ -1,13 +1,13 @@
+import { z } from "zod";
+import { upsertMealSchema } from "./meal.validation";
+
 export type IMealFilterRequest = {
   periodId?: string | undefined;
   memberId?: string | undefined;
   date?: string | undefined;
 };
 
-export type IMealUpsert = {
-  mealCount: number;
-  periodId: string;
-};
+export type IMealUpsert = z.infer<typeof upsertMealSchema>["body"];
 
 export type IMealEntry = {
   id: string;

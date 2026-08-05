@@ -28,8 +28,19 @@ const getDepositsByPeriod = async (periodId?: string): Promise<IDepositResponseP
 };
 
 const createDeposit = async (payload: ICreateDepositPayload): Promise<IDepositResponsePayload> => {
+  let targetPeriodId = payload.periodId;
+  if (!targetPeriodId) {
+    const activePeriod = await prisma.period.findFirst({
+      where: { status: "ACTIVE" },
+    });
+    if (!activePeriod) {
+      throw new NotFoundError("No active period found");
+    }
+    targetPeriodId = activePeriod.id;
+  }
+
   const period = await prisma.period.findUnique({
-    where: { id: payload.periodId },
+    where: { id: targetPeriodId },
   });
 
   if (!period) {
@@ -43,9 +54,9 @@ const createDeposit = async (payload: ICreateDepositPayload): Promise<IDepositRe
   return prisma.deposit.create({
     data: {
       memberId: payload.memberId,
-      date: new Date(payload.date),
+      date: payload.date ? new Date(payload.date) : new Date(),
       amount: payload.amount,
-      periodId: payload.periodId,
+      periodId: targetPeriodId,
     },
     include: {
       member: { select: { id: true, name: true } },

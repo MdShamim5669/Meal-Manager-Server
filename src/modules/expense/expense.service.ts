@@ -35,8 +35,19 @@ const getExpensesByPeriod = async (filters?: IExpenseFilterRequest): Promise<IEx
 };
 
 const createExpense = async (payload: IExpenseCreate): Promise<IExpense> => {
+  let targetPeriodId = payload.periodId;
+  if (!targetPeriodId) {
+    const activePeriod = await prisma.period.findFirst({
+      where: { status: "ACTIVE" },
+    });
+    if (!activePeriod) {
+      throw new NotFoundError("No active period found");
+    }
+    targetPeriodId = activePeriod.id;
+  }
+
   const period = await prisma.period.findUnique({
-    where: { id: payload.periodId },
+    where: { id: targetPeriodId },
   });
 
   if (!period) {
@@ -47,15 +58,22 @@ const createExpense = async (payload: IExpenseCreate): Promise<IExpense> => {
     throw new BadRequestError("Cannot add expenses to a closed period");
   }
 
+  let paidByMemberId = payload.paidBy;
+  if (!paidByMemberId) {
+    const firstMember = await prisma.member.findFirst({ where: { active: true } });
+    if (!firstMember) throw new NotFoundError("No active member found to attribute expense");
+    paidByMemberId = firstMember.id;
+  }
+
   return prisma.expense.create({
     data: {
-      date: new Date(payload.date),
+      date: payload.date ? new Date(payload.date) : new Date(),
       category: payload.category,
       amount: payload.amount,
-      paidBy: payload.paidBy,
+      paidBy: paidByMemberId,
       description: payload.description,
       receiptPhoto: payload.receiptPhoto,
-      periodId: payload.periodId,
+      periodId: targetPeriodId,
     },
     include: {
       member: { select: { id: true, name: true } },

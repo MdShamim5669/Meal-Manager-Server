@@ -46,8 +46,7 @@ export class PeriodController {
   });
 
   static closePeriod = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
-    const parsed = periodValidation.closePeriodSchema.parse(req.body);
-    const result = await PeriodService.closePeriod(parsed);
+    const result = await PeriodService.closePeriod(req.body);
 
     sendResponse(res, {
       statusCode: 200,

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { closePeriodSchema } from "./period.validation";
 import { PeriodStatus, Role } from "@prisma/client";
 
-export type ClosePeriodInput = z.infer<typeof closePeriodSchema>;
+export type ClosePeriodInput = z.infer<typeof closePeriodSchema>["body"];
 export type IClosePeriodPayload = ClosePeriodInput;
 
 export type IDebtSettlementTransfer = {

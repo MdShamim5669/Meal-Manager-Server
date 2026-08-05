@@ -1,0 +1,16 @@
+name: Local Environment Copy
+values:
+  - key: baseUrl
+    value: 'http://localhost:5000'
+  - key: authToken
+    value: ''
+  - key: memberId
+    value: ''
+  - key: periodId
+    value: ''
+  - key: expenseId
+    value: ''
+  - key: dutyId
+    value: ''
+  - key: resetToken
+    value: ''

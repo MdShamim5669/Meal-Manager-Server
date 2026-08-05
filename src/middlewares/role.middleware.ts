@@ -25,8 +25,8 @@ export function authorizeRoles(...roles: Role[]) {
 }
 
 export const auth = authorizeRoles;
-export const requireManager = authorizeRoles("MANAGER", "SUPER_ADMIN");
-export const requireSuperAdmin = authorizeRoles("SUPER_ADMIN");
-export const requireMember = authorizeRoles("MEMBER");
+export const requireManager = authorizeRoles(Role.MANAGER, Role.SUPER_ADMIN);
+export const requireSuperAdmin = authorizeRoles(Role.SUPER_ADMIN);
+export const requireMember = authorizeRoles(Role.MEMBER);
 
 export default authorizeRoles;

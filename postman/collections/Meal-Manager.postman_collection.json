@@ -1,0 +1,951 @@
+{
+  "info": {
+    "_postman_id": "a5d84c12-3e91-49fa-9210-887766554433",
+    "name": "Meal Manager API",
+    "description": "Complete Postman Collection for Meal Manager Backend REST APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Setup Initial Manager",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.token) {",
+                  "        pm.environment.set('authToken', res.data.token);",
+                  "    }",
+                  "    if (res.data && res.data.member && res.data.member.id) {",
+                  "        pm.environment.set('memberId', res.data.member.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Super Manager\",\n  \"pin\": \"1234\",\n  \"periodLabel\": \"August 2026\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/setup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "setup"]
+            },
+            "description": "Initial setup to create the first Manager account and initialize the active meal period."
+          },
+          "response": [
+            {
+              "name": "Success Setup Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Super Manager\",\n  \"pin\": \"1234\",\n  \"periodLabel\": \"August 2026\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/setup",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "setup"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"statusCode\": 201,\n  \"message\": \"Initial Manager setup completed successfully\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"member\": {\n      \"id\": \"cm7123456789\",\n      \"name\": \"Super Manager\",\n      \"role\": \"MANAGER\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login Member / Manager",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.token) {",
+                  "        pm.environment.set('authToken', res.data.token);",
+                  "    }",
+                  "    if (res.data && res.data.member && res.data.member.id) {",
+                  "        pm.environment.set('memberId', res.data.member.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{memberId}}\",\n  \"pin\": \"1234\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Logs in a member or manager with member ID and 4-digit PIN."
+          },
+          "response": [
+            {
+              "name": "Successful Login Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"memberId\": \"cm7123456789\",\n  \"pin\": \"1234\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "login"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"statusCode\": 200,\n  \"message\": \"Logged in successfully\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"member\": {\n      \"id\": \"cm7123456789\",\n      \"name\": \"Super Manager\",\n      \"role\": \"MANAGER\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Current User Profile (/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            },
+            "description": "Fetches profile information of the currently authenticated user."
+          },
+          "response": [
+            {
+              "name": "User Profile Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/me",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "me"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"statusCode\": 200,\n  \"message\": \"User profile fetched successfully\",\n  \"data\": {\n    \"id\": \"cm7123456789\",\n    \"name\": \"Super Manager\",\n    \"role\": \"MANAGER\",\n    \"active\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Change PIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPin\": \"1234\",\n  \"newPin\": \"5678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/change-pin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "change-pin"]
+            },
+            "description": "Allows an authenticated user to change their PIN."
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot PIN Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.resetToken) {",
+                  "        pm.environment.set('resetToken', res.data.resetToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{memberId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/forgot-pin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "forgot-pin"]
+            },
+            "description": "Generates a PIN reset token for a member."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset PIN with Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resetToken\": \"{{resetToken}}\",\n  \"newPin\": \"9999\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/reset-pin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "reset-pin"]
+            },
+            "description": "Resets user PIN using the token generated from forgot-pin."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Reset PIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{memberId}}\",\n  \"newPin\": \"4321\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/admin-reset-pin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "admin-reset-pin"]
+            },
+            "description": "Allows Managers to reset the PIN of any member."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Members",
+      "item": [
+        {
+          "name": "Get All Members",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/members?search=&role=MEMBER&active=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "members"],
+              "query": [
+                { "key": "search", "value": "", "description": "Optional search term for member name" },
+                { "key": "role", "value": "MEMBER", "description": "Filter by role: MANAGER or MEMBER" },
+                { "key": "active", "value": "true", "description": "Filter by active status: true or false" }
+              ]
+            },
+            "description": "Returns list of all registered mess members."
+          },
+          "response": [
+            {
+              "name": "Get Members Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/members",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "members"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"statusCode\": 200,\n  \"message\": \"Members retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": \"cm7123456789\",\n      \"name\": \"Super Manager\",\n      \"role\": \"MANAGER\",\n      \"active\": true\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Member",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.id) {",
+                  "        pm.environment.set('memberId', res.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"pin\": \"1234\",\n  \"role\": \"MEMBER\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/members",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "members"]
+            },
+            "description": "Creates a new mess member. (Manager access required)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Member",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe Updated\",\n  \"role\": \"MANAGER\",\n  \"active\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/members/{{memberId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "members", "{{memberId}}"]
+            },
+            "description": "Updates member details such as name, role, or active status."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Meals",
+      "item": [
+        {
+          "name": "Get Meals List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/meals?memberId={{memberId}}&startDate=2026-08-01&endDate=2026-08-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "meals"],
+              "query": [
+                { "key": "memberId", "value": "{{memberId}}", "description": "Filter meals by member ID" },
+                { "key": "periodId", "value": "{{periodId}}", "description": "Filter meals by period ID", "disabled": true },
+                { "key": "startDate", "value": "2026-08-01", "description": "Filter start date (YYYY-MM-DD)" },
+                { "key": "endDate", "value": "2026-08-31", "description": "Filter end date (YYYY-MM-DD)" }
+              ]
+            },
+            "description": "Retrieves meal count records for mess members."
+          },
+          "response": []
+        },
+        {
+          "name": "Upsert Meal Entry",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mealCount\": 2,\n  \"periodId\": \"{{periodId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/meals/{{memberId}}/2026-08-06",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "meals", "{{memberId}}", "2026-08-06"]
+            },
+            "description": "Add or update the meal count for a specific member on a specific date."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Expenses",
+      "item": [
+        {
+          "name": "Get Expenses List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses?category=MARKET",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "expenses"],
+              "query": [
+                { "key": "category", "value": "MARKET", "description": "Filter by category: MARKET or UTILITY" },
+                { "key": "periodId", "value": "{{periodId}}", "description": "Filter by period ID", "disabled": true }
+              ]
+            },
+            "description": "Retrieves all expense records."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Expense",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.id) {",
+                  "        pm.environment.set('expenseId', res.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"MARKET\",\n  \"amount\": 1500,\n  \"description\": \"Weekly bazaar market\",\n  \"date\": \"2026-08-06\",\n  \"paidBy\": \"{{memberId}}\",\n  \"periodId\": \"{{periodId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "expenses"]
+            },
+            "description": "Adds a new expense entry. (Manager access required)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Expense",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1750,\n  \"description\": \"Updated weekly bazaar cost\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses/{{expenseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "expenses", "{{expenseId}}"]
+            },
+            "description": "Updates an existing expense entry."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Expense",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/expenses/{{expenseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "expenses", "{{expenseId}}"]
+            },
+            "description": "Deletes an expense record."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Deposits",
+      "item": [
+        {
+          "name": "Get Deposits List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deposits?memberId={{memberId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "deposits"],
+              "query": [
+                { "key": "memberId", "value": "{{memberId}}", "description": "Filter by member ID" },
+                { "key": "periodId", "value": "{{periodId}}", "description": "Filter by period ID", "disabled": true }
+              ]
+            },
+            "description": "Retrieves mess member cash deposit records."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Deposit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{memberId}}\",\n  \"amount\": 3000,\n  \"date\": \"2026-08-06\",\n  \"periodId\": \"{{periodId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deposits",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "deposits"]
+            },
+            "description": "Records a money deposit from a member. (Manager access required)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Roster",
+      "item": [
+        {
+          "name": "Get Duty Roster",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roster?periodId={{periodId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "roster"],
+              "query": [
+                { "key": "periodId", "value": "{{periodId}}", "description": "Filter by period ID" },
+                { "key": "memberId", "value": "{{memberId}}", "description": "Filter by member ID", "disabled": true }
+              ]
+            },
+            "description": "Fetches duty schedule roster."
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Duty",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.id) {",
+                  "        pm.environment.set('dutyId', res.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberId\": \"{{memberId}}\",\n  \"date\": \"2026-08-07\",\n  \"periodId\": \"{{periodId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roster",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "roster"]
+            },
+            "description": "Assigns market/cooking duty to a member on a date. (Manager access required)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Duty Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DONE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roster/{{dutyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "roster", "{{dutyId}}"]
+            },
+            "description": "Updates duty status (SCHEDULED, DONE, MISSED)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Period",
+      "item": [
+        {
+          "name": "Get Active Period & Dashboard Summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var res = pm.response.json();",
+                  "    if (res.data && res.data.period && res.data.period.id) {",
+                  "        pm.environment.set('periodId', res.data.period.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/period/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "period", "dashboard"]
+            },
+            "description": "Gets dashboard summary calculations for the currently active period."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Periods",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/period",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "period"]
+            },
+            "description": "Retrieves list of all meal periods."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Period By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/period/{{periodId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "period", "{{periodId}}"]
+            },
+            "description": "Retrieves detailed information for a specific period ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Close Period",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"periodId\": \"{{periodId}}\",\n  \"nextPeriodLabel\": \"September 2026\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/period/close",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "period", "close"]
+            },
+            "description": "Closes the current active meal period and initializes the next period. (Manager access required)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Member Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/member",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "dashboard", "member"]
+            },
+            "description": "Gets dashboard data tailored for a regular MEMBER role."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Manager Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/manager",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "dashboard", "manager"]
+            },
+            "description": "Gets dashboard overview for MANAGER role."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Super Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/super-admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "dashboard", "super-admin"]
+            },
+            "description": "Gets high-level metrics for SUPER_ADMIN role."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

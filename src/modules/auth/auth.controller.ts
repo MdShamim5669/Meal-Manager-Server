@@ -36,4 +36,51 @@ export class AuthController {
       data: result,
     });
   });
+
+  static changePin = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
+    const result = await AuthService.changePin(req.user!.memberId, req.body);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: result.message,
+      data: null,
+    });
+  });
+
+  static forgotPin = catchAsync(async (req: Request, res: Response) => {
+    const result = await AuthService.forgotPin(req.body);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: result.message,
+      data: {
+        resetToken: result.resetToken,
+        expiresAt: result.expiresAt,
+      },
+    });
+  });
+
+  static resetPin = catchAsync(async (req: Request, res: Response) => {
+    const result = await AuthService.resetPin(req.body);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: result.message,
+      data: null,
+    });
+  });
+
+  static adminResetPin = catchAsync(async (req: Request, res: Response) => {
+    const result = await AuthService.adminResetPin(req.body);
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: result.message,
+      data: null,
+    });
+  });
 }

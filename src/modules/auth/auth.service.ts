@@ -1,5 +1,15 @@
+import crypto from "crypto";
 import { prisma } from "../../config/db";
-import { IAuthSetup, IAuthLogin, IAuthResponse, ICurrentMember } from "./auth.interface";
+import {
+  IAuthSetup,
+  IAuthLogin,
+  IAuthResponse,
+  ICurrentMember,
+  IChangePin,
+  IForgotPin,
+  IResetPin,
+  IAdminResetPin,
+} from "./auth.interface";
 import { hashPin, comparePin } from "../../utils/hash.util";
 import { generateToken } from "../../utils/jwt.util";
 import { BadRequestError } from "../../errors/BadRequestError";
@@ -7,12 +17,12 @@ import { UnauthorizedError } from "../../errors/UnauthorizedError";
 import { NotFoundError } from "../../errors/NotFoundError";
 
 const setup = async (payload: IAuthSetup): Promise<IAuthResponse> => {
-  return prisma.$transaction(async (tx) => {
-    const memberCount = await tx.member.count();
-    if (memberCount > 0) {
-      throw new BadRequestError("System setup already completed. Manager already exists.");
-    }
+  const memberCount = await prisma.member.count();
+  if (memberCount > 0) {
+    throw new BadRequestError("System setup already completed. Manager already exists.");
+  }
 
+  return prisma.$transaction(async (tx) => {
     const hashedPin = await hashPin(payload.pin);
 
     const manager = await tx.member.create({
@@ -109,8 +119,114 @@ const getMe = async (memberId: string): Promise<ICurrentMember> => {
   return member;
 };
 
+const changePin = async (memberId: string, payload: IChangePin) => {
+  const member = await prisma.member.findUnique({
+    where: { id: memberId },
+  });
+
+  if (!member || !member.active) {
+    throw new NotFoundError("Member not found or inactive");
+  }
+
+  const isMatch = await comparePin(payload.oldPin, member.pinHash);
+  if (!isMatch) {
+    throw new UnauthorizedError("Current PIN is incorrect");
+  }
+
+  const newPinHash = await hashPin(payload.newPin);
+
+  await prisma.member.update({
+    where: { id: memberId },
+    data: { pinHash: newPinHash },
+  });
+
+  return { message: "PIN changed successfully" };
+};
+
+const forgotPin = async (payload: IForgotPin) => {
+  const member = await prisma.member.findUnique({
+    where: { id: payload.memberId },
+  });
+
+  if (!member || !member.active) {
+    throw new NotFoundError("Member not found or inactive");
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes validity
+
+  await prisma.member.update({
+    where: { id: member.id },
+    data: {
+      resetToken,
+      resetTokenExpiresAt: expiresAt,
+    },
+  });
+
+  return {
+    message: "Reset token generated successfully. Valid for 15 minutes.",
+    resetToken,
+    expiresAt,
+  };
+};
+
+const resetPin = async (payload: IResetPin) => {
+  const member = await prisma.member.findFirst({
+    where: {
+      resetToken: payload.resetToken,
+      resetTokenExpiresAt: {
+        gte: new Date(),
+      },
+    },
+  });
+
+  if (!member) {
+    throw new BadRequestError("Invalid or expired reset token");
+  }
+
+  const newPinHash = await hashPin(payload.newPin);
+
+  await prisma.member.update({
+    where: { id: member.id },
+    data: {
+      pinHash: newPinHash,
+      resetToken: null,
+      resetTokenExpiresAt: null,
+    },
+  });
+
+  return { message: "PIN reset successfully" };
+};
+
+const adminResetPin = async (payload: IAdminResetPin) => {
+  const member = await prisma.member.findUnique({
+    where: { id: payload.memberId },
+  });
+
+  if (!member) {
+    throw new NotFoundError("Member not found");
+  }
+
+  const newPinHash = await hashPin(payload.newPin);
+
+  await prisma.member.update({
+    where: { id: payload.memberId },
+    data: {
+      pinHash: newPinHash,
+      resetToken: null,
+      resetTokenExpiresAt: null,
+    },
+  });
+
+  return { message: `PIN reset successfully for member: ${member.name}` };
+};
+
 export const AuthService = {
   setup,
   login,
   getMe,
+  changePin,
+  forgotPin,
+  resetPin,
+  adminResetPin,
 };

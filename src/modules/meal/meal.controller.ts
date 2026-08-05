@@ -27,8 +27,7 @@ export class MealController {
       throw new ForbiddenError("You can only update your own daily meals");
     }
 
-    const parsed = mealValidation.upsertMealSchema.parse(req.body);
-    const result = await MealService.upsertMeal(memberId, date, parsed);
+    const result = await MealService.upsertMeal(memberId, date, req.body);
 
     sendResponse(res, {
       statusCode: 200,

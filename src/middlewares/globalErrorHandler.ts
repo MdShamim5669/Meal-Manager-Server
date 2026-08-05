@@ -36,6 +36,10 @@ const globalErrorHandler = (
       message = "Record Not Found";
       error = err.meta;
     }
+  } else if (err?.statusCode || err?.status) {
+    statusCode = err.statusCode || err.status;
+    message = err.message;
+    error = err;
   } else if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;

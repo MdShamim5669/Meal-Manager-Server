@@ -26,8 +26,19 @@ const getRosterByPeriod = async (periodId?: string): Promise<IDutyRosterResponse
 };
 
 const createDuty = async (payload: ICreateDutyPayload): Promise<IDutyRosterResponsePayload> => {
+  let targetPeriodId = payload.periodId;
+  if (!targetPeriodId) {
+    const activePeriod = await prisma.period.findFirst({
+      where: { status: "ACTIVE" },
+    });
+    if (!activePeriod) {
+      throw new NotFoundError("No active period found");
+    }
+    targetPeriodId = activePeriod.id;
+  }
+
   const period = await prisma.period.findUnique({
-    where: { id: payload.periodId },
+    where: { id: targetPeriodId },
   });
 
   if (!period) {
@@ -41,8 +52,8 @@ const createDuty = async (payload: ICreateDutyPayload): Promise<IDutyRosterRespo
   return prisma.dutyRoster.create({
     data: {
       memberId: payload.memberId,
-      date: new Date(payload.date),
-      periodId: payload.periodId,
+      date: payload.date ? new Date(payload.date) : new Date(),
+      periodId: targetPeriodId,
       status: "SCHEDULED",
     },
     include: {

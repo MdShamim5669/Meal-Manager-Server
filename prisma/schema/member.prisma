@@ -1,10 +1,12 @@
 model Member {
-  id         String   @id @default(uuid())
-  name       String
-  pinHash    String
-  role       Role     @default(MEMBER)
-  active     Boolean  @default(true)
-  joinedDate DateTime @default(now())
+  id                  String    @id @default(uuid())
+  name                String
+  pinHash             String
+  role                Role      @default(MEMBER)
+  active              Boolean   @default(true)
+  joinedDate          DateTime  @default(now())
+  resetToken          String?
+  resetTokenExpiresAt DateTime?
 
   meals      MealEntry[]
   expenses   Expense[]

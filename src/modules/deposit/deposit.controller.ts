@@ -20,8 +20,7 @@ export class DepositController {
   });
 
   static createDeposit = catchAsync(async (req: AuthenticatedRequest, res: Response) => {
-    const parsed = depositValidation.createDepositSchema.parse(req.body);
-    const result = await DepositService.createDeposit(parsed);
+    const result = await DepositService.createDeposit(req.body);
 
     sendResponse(res, {
       statusCode: 201,

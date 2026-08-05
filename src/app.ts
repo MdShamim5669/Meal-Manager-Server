@@ -1,15 +1,24 @@
 import express, { Application, NextFunction, Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import compression from "compression";
 import httpStatus from "http-status";
 import { env } from "./config/env";
 import router from "./routes";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
+import { globalLimiter } from "./middlewares/rateLimiter";
 import { CronService } from "./cron/cron.service";
 
 const app: Application = express();
 
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(helmet());
+app.use(compression());
+const corsOrigins = env.CORS_ORIGIN.includes(",")
+  ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
+  : env.CORS_ORIGIN;
+
+app.use(cors({ origin: corsOrigins, credentials: true }));
 app.use(cookieParser());
 
 // Parsers
@@ -26,8 +35,8 @@ app.get("/", (_req: Request, res: Response) => {
   });
 });
 
-// API Routes
-app.use("/api/v1", router);
+// Apply Global Rate Limiter & API Routes
+app.use("/api/v1", globalLimiter, router);
 
 // Global Error Handler
 app.use(globalErrorHandler);

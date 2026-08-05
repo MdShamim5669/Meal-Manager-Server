@@ -35,8 +35,19 @@ const upsertMeal = async (
   dateStr: string,
   payload: IMealUpsert
 ): Promise<IMealEntry> => {
+  let targetPeriodId = payload.periodId;
+  if (!targetPeriodId) {
+    const activePeriod = await prisma.period.findFirst({
+      where: { status: "ACTIVE" },
+    });
+    if (!activePeriod) {
+      throw new NotFoundError("No active period found");
+    }
+    targetPeriodId = activePeriod.id;
+  }
+
   const period = await prisma.period.findUnique({
-    where: { id: payload.periodId },
+    where: { id: targetPeriodId },
   });
 
   if (!period) {
@@ -58,13 +69,13 @@ const upsertMeal = async (
     },
     update: {
       mealCount: payload.mealCount,
-      periodId: payload.periodId,
+      periodId: targetPeriodId,
     },
     create: {
       memberId,
       date,
       mealCount: payload.mealCount,
-      periodId: payload.periodId,
+      periodId: targetPeriodId,
     },
   });
 };
