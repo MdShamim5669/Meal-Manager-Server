@@ -1,68 +1,79 @@
 import { prisma } from "../../config/db";
 import { ICreateDutyPayload, IUpdateDutyPayload, IDutyRosterResponsePayload } from "./roster.interface";
 import { NotFoundError } from "../../errors/NotFoundError";
-import { DutyStatus } from "@prisma/client";
+import { BadRequestError } from "../../errors/BadRequestError";
 
-export class RosterService {
-  static async getRosterByPeriod(periodId?: string): Promise<IDutyRosterResponsePayload[]> {
-    let targetPeriodId = periodId;
+const getRosterByPeriod = async (periodId?: string): Promise<IDutyRosterResponsePayload[]> => {
+  let targetPeriodId = periodId;
 
-    if (!targetPeriodId) {
-      const activePeriod = await prisma.period.findFirst({
-        where: { status: "ACTIVE" },
-      });
-      if (!activePeriod) {
-        throw new NotFoundError("No active period found");
-      }
-      targetPeriodId = activePeriod.id;
-    }
-
-    return prisma.dutyRoster.findMany({
-      where: { periodId: targetPeriodId },
-      include: {
-        member: { select: { id: true, name: true } },
-      },
-      orderBy: { date: "asc" },
+  if (!targetPeriodId) {
+    const activePeriod = await prisma.period.findFirst({
+      where: { status: "ACTIVE" },
     });
+    if (!activePeriod) {
+      throw new NotFoundError("No active period found");
+    }
+    targetPeriodId = activePeriod.id;
   }
 
-  static async createDuty(payload: ICreateDutyPayload): Promise<IDutyRosterResponsePayload> {
-    return prisma.dutyRoster.create({
-      data: {
-        memberId: payload.memberId,
-        date: new Date(payload.date),
-        periodId: payload.periodId,
-        status: "SCHEDULED",
-      },
-      include: {
-        member: { select: { id: true, name: true } },
-      },
-    });
+  return prisma.dutyRoster.findMany({
+    where: { periodId: targetPeriodId },
+    include: {
+      member: { select: { id: true, name: true } },
+    },
+    orderBy: { date: "asc" },
+  });
+};
+
+const createDuty = async (payload: ICreateDutyPayload): Promise<IDutyRosterResponsePayload> => {
+  const period = await prisma.period.findUnique({
+    where: { id: payload.periodId },
+  });
+
+  if (!period) {
+    throw new NotFoundError("Period not found");
   }
 
-  static async updateDuty(id: string, payload: IUpdateDutyPayload): Promise<IDutyRosterResponsePayload> {
-    const existing = await prisma.dutyRoster.findUnique({ where: { id } });
-    if (!existing) {
-      throw new NotFoundError("Duty roster entry not found");
-    }
-
-    let doneAt = existing.doneAt;
-    if (payload.status === "DONE" && existing.status !== "DONE") {
-      doneAt = new Date();
-    } else if (payload.status && payload.status !== "DONE") {
-      doneAt = null;
-    }
-
-    return prisma.dutyRoster.update({
-      where: { id },
-      data: {
-        ...(payload.status && { status: payload.status as DutyStatus }),
-        ...(payload.memberId && { memberId: payload.memberId }),
-        doneAt,
-      },
-      include: {
-        member: { select: { id: true, name: true } },
-      },
-    });
+  if (period.status === "CLOSED") {
+    throw new BadRequestError("Cannot add duty roster entries to a closed period");
   }
-}
+
+  return prisma.dutyRoster.create({
+    data: {
+      memberId: payload.memberId,
+      date: new Date(payload.date),
+      periodId: payload.periodId,
+      status: "SCHEDULED",
+    },
+    include: {
+      member: { select: { id: true, name: true } },
+    },
+  });
+};
+
+const updateDuty = async (
+  id: string,
+  payload: IUpdateDutyPayload
+): Promise<IDutyRosterResponsePayload> => {
+  const existing = await prisma.dutyRoster.findUnique({ where: { id } });
+  if (!existing) {
+    throw new NotFoundError("Duty roster entry not found");
+  }
+
+  return prisma.dutyRoster.update({
+    where: { id },
+    data: {
+      ...(payload.status && { status: payload.status }),
+      ...(payload.memberId && { memberId: payload.memberId }),
+    },
+    include: {
+      member: { select: { id: true, name: true } },
+    },
+  });
+};
+
+export const RosterService = {
+  getRosterByPeriod,
+  createDuty,
+  updateDuty,
+};
