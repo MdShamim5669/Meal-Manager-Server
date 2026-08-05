@@ -1,17 +1,8 @@
 import dotenv from "dotenv";
 import path from "path";
-import { z } from "zod";
+import { envSchema } from "./env.schema";
 
 dotenv.config({ path: path.join(process.cwd(), ".env") });
-
-const envSchema = z.object({
-  NODE_ENV: z.string().default("development"),
-  PORT: z.string().default("5000"),
-  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
-  JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
-  EXPIRES_IN: z.string().default("30d"),
-  CORS_ORIGIN: z.string().default("http://localhost:5173"),
-});
 
 const parsed = envSchema.safeParse(process.env);
 
