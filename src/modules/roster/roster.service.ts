@@ -49,10 +49,15 @@ const createDuty = async (payload: ICreateDutyPayload): Promise<IDutyRosterRespo
     throw new BadRequestError("Cannot add duty roster entries to a closed period");
   }
 
+  const dutyDate = payload.date ? new Date(payload.date) : new Date();
+  if (isNaN(dutyDate.getTime())) {
+    throw new BadRequestError("Invalid date format provided");
+  }
+
   return prisma.dutyRoster.create({
     data: {
       memberId: payload.memberId,
-      date: payload.date ? new Date(payload.date) : new Date(),
+      date: dutyDate,
       periodId: targetPeriodId,
       status: "SCHEDULED",
     },

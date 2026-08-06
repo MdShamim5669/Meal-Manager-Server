@@ -65,9 +65,14 @@ const createExpense = async (payload: IExpenseCreate): Promise<IExpense> => {
     paidByMemberId = firstMember.id;
   }
 
+  const expenseDate = payload.date ? new Date(payload.date) : new Date();
+  if (isNaN(expenseDate.getTime())) {
+    throw new BadRequestError("Invalid date format provided");
+  }
+
   return prisma.expense.create({
     data: {
-      date: payload.date ? new Date(payload.date) : new Date(),
+      date: expenseDate,
       category: payload.category,
       amount: payload.amount,
       paidBy: paidByMemberId,
@@ -87,10 +92,18 @@ const updateExpense = async (id: string, payload: IExpenseUpdate): Promise<IExpe
     throw new NotFoundError("Expense record not found");
   }
 
+  let updatedDate: Date | undefined;
+  if (payload.date) {
+    updatedDate = new Date(payload.date);
+    if (isNaN(updatedDate.getTime())) {
+      throw new BadRequestError("Invalid date format provided");
+    }
+  }
+
   return prisma.expense.update({
     where: { id },
     data: {
-      ...(payload.date && { date: new Date(payload.date) }),
+      ...(updatedDate && { date: updatedDate }),
       ...(payload.category && { category: payload.category }),
       ...(payload.amount !== undefined && { amount: payload.amount }),
       ...(payload.paidBy && { paidBy: payload.paidBy }),

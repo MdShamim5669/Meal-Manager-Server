@@ -18,6 +18,8 @@ const getAllMembers = async (filters?: IMemberFilterRequest): Promise<IMember[]>
     select: {
       id: true,
       name: true,
+      email: true,
+      phone: true,
       role: true,
       active: true,
       joinedDate: true,
@@ -32,6 +34,8 @@ const createMember = async (payload: IMemberCreate): Promise<IMember> => {
   const result = await prisma.member.create({
     data: {
       name: payload.name,
+      email: payload.email,
+      phone: payload.phone,
       pinHash,
       role: payload.role,
       active: true,
@@ -39,6 +43,8 @@ const createMember = async (payload: IMemberCreate): Promise<IMember> => {
     select: {
       id: true,
       name: true,
+      email: true,
+      phone: true,
       role: true,
       active: true,
       joinedDate: true,
@@ -61,6 +67,8 @@ const updateMember = async (id: string, payload: IMemberUpdate): Promise<IMember
     select: {
       id: true,
       name: true,
+      email: true,
+      phone: true,
       role: true,
       active: true,
       joinedDate: true,

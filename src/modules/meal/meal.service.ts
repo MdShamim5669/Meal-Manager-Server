@@ -59,6 +59,9 @@ const upsertMeal = async (
   }
 
   const date = new Date(dateStr);
+  if (isNaN(date.getTime())) {
+    throw new BadRequestError("Invalid date format provided");
+  }
 
   return prisma.mealEntry.upsert({
     where: {

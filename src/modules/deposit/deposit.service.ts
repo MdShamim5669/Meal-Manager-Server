@@ -51,10 +51,15 @@ const createDeposit = async (payload: ICreateDepositPayload): Promise<IDepositRe
     throw new BadRequestError("Cannot add deposits to a closed period");
   }
 
+  const depositDate = payload.date ? new Date(payload.date) : new Date();
+  if (isNaN(depositDate.getTime())) {
+    throw new BadRequestError("Invalid date format provided");
+  }
+
   return prisma.deposit.create({
     data: {
       memberId: payload.memberId,
-      date: payload.date ? new Date(payload.date) : new Date(),
+      date: depositDate,
       amount: payload.amount,
       periodId: targetPeriodId,
     },
