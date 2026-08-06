@@ -60,7 +60,7 @@ const getMemberDashboard = async (
   });
 
   const members = await prisma.member.findMany({
-    where: { active: true },
+    where: { active: true, role: { not: "SUPER_ADMIN" } },
     select: { id: true, name: true, role: true },
   });
 
@@ -114,7 +114,7 @@ const getManagerDashboard = async (
   }
 
   const members = await prisma.member.findMany({
-    where: { active: true },
+    where: { active: true, role: { not: "SUPER_ADMIN" } },
     select: { id: true, name: true, role: true },
   });
 

@@ -12,7 +12,7 @@ const getAllMembers = async (filters?: IMemberFilterRequest): Promise<IMember[]>
       ...(searchTerm && {
         name: { contains: searchTerm, mode: "insensitive" },
       }),
-      ...(role && { role }),
+      ...(role ? { role } : { role: { not: "SUPER_ADMIN" } }),
       ...(active !== undefined && { active }),
     },
     select: {
@@ -79,8 +79,67 @@ const updateMember = async (id: string, payload: IMemberUpdate): Promise<IMember
   return result;
 };
 
+const searchByIdentifier = async (identifier: string): Promise<{ exists: boolean; member: IMember | null }> => {
+  const query = identifier.trim();
+  if (!query) return { exists: false, member: null };
+
+  const member = await prisma.member.findFirst({
+    where: {
+      OR: [
+        { phone: query },
+        { email: query.toLowerCase() },
+        { id: query }
+      ]
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      role: true,
+      active: true,
+      joinedDate: true,
+    }
+  });
+
+  return {
+    exists: !!member,
+    member: member || null
+  };
+};
+
+const createPlaceholderMember = async (payload: { name: string; phone?: string; email?: string; role?: any; pin?: string }): Promise<IMember> => {
+  const initialPin = payload.pin || "1234";
+  const pinHash = await hashPin(initialPin);
+
+  const result = await prisma.member.create({
+    data: {
+      name: payload.name,
+      email: payload.email ? payload.email.toLowerCase() : null,
+      phone: payload.phone || null,
+      pinHash,
+      role: payload.role || "MEMBER",
+      active: true,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      role: true,
+      active: true,
+      joinedDate: true,
+    },
+  });
+
+  clearCache("/members");
+  return result;
+};
+
 export const MemberService = {
   getAllMembers,
   createMember,
   updateMember,
+  searchByIdentifier,
+  createPlaceholderMember,
 };

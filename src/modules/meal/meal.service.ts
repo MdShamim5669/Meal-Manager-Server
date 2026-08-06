@@ -63,6 +63,8 @@ const upsertMeal = async (
     throw new BadRequestError("Invalid date format provided");
   }
 
+  const countVal = payload.mealCount ?? (payload as any).count ?? 0;
+
   return prisma.mealEntry.upsert({
     where: {
       memberId_date: {
@@ -71,13 +73,13 @@ const upsertMeal = async (
       },
     },
     update: {
-      mealCount: payload.mealCount,
+      mealCount: countVal,
       periodId: targetPeriodId,
     },
     create: {
       memberId,
       date,
-      mealCount: payload.mealCount,
+      mealCount: countVal,
       periodId: targetPeriodId,
     },
   });

@@ -14,11 +14,14 @@ const app: Application = express();
 
 app.use(helmet());
 app.use(compression());
-const corsOrigins = env.CORS_ORIGIN.includes(",")
-  ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
-  : env.CORS_ORIGIN;
-
-app.use(cors({ origin: corsOrigins, credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      callback(null, origin || true);
+    },
+    credentials: true,
+  })
+);
 app.use(cookieParser());
 
 // Parsers

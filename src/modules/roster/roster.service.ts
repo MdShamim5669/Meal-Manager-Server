@@ -2,6 +2,7 @@ import { prisma } from "../../config/db";
 import { ICreateDutyPayload, IUpdateDutyPayload, IDutyRosterResponsePayload } from "./roster.interface";
 import { NotFoundError } from "../../errors/NotFoundError";
 import { BadRequestError } from "../../errors/BadRequestError";
+import { sendDutyAssignmentEmail } from "../../utils/email.util";
 
 const getRosterByPeriod = async (periodId?: string): Promise<IDutyRosterResponsePayload[]> => {
   let targetPeriodId = periodId;
@@ -54,7 +55,7 @@ const createDuty = async (payload: ICreateDutyPayload): Promise<IDutyRosterRespo
     throw new BadRequestError("Invalid date format provided");
   }
 
-  return prisma.dutyRoster.create({
+  const created = await prisma.dutyRoster.create({
     data: {
       memberId: payload.memberId,
       date: dutyDate,
@@ -65,6 +66,27 @@ const createDuty = async (payload: ICreateDutyPayload): Promise<IDutyRosterRespo
       member: { select: { id: true, name: true } },
     },
   });
+
+  // Fire-and-forget duty assignment email notification
+  prisma.member.findUnique({
+    where: { id: payload.memberId },
+    select: { email: true, name: true },
+  }).then((memberInfo) => {
+    if (memberInfo?.email) {
+      sendDutyAssignmentEmail({
+        toEmail: memberInfo.email,
+        toName: memberInfo.name,
+        date: dutyDate.toISOString().split("T")[0],
+        messName: process.env.MESS_NAME || "Mess Group",
+      }).catch((err) => {
+        console.error("[MAIL] Failed to send duty email:", err.message);
+      });
+    } else {
+      console.log(`[MAIL] Member ${payload.memberId} has no email — skipping duty notification.`);
+    }
+  }).catch(console.error);
+
+  return created;
 };
 
 const updateDuty = async (

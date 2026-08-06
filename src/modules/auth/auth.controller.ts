@@ -83,4 +83,16 @@ export class AuthController {
       data: null,
     });
   });
+
+  static getPublicMembers = catchAsync(async (_req: Request, res: Response) => {
+    const result = await AuthService.getPublicMembers();
+
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Public members list fetched successfully",
+      data: result,
+    });
+  });
 }
+

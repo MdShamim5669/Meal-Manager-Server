@@ -3,6 +3,8 @@ import { z } from "zod";
 export const setupSchema = z.object({
   body: z.object({
     name: z.string().min(1, "Manager name is required"),
+    email: z.string().email("Invalid email address").optional(),
+    phone: z.string().optional(),
     pin: z.string().min(4, "PIN must be at least 4 digits"),
     periodLabel: z.string().optional(),
   }),

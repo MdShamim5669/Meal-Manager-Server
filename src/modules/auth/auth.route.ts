@@ -11,6 +11,7 @@ const router = Router();
 
 router.post("/setup", authLimiter, validateRequest(authValidation.setupSchema), AuthController.setup);
 router.post("/login", authLimiter, validateRequest(authValidation.loginSchema), AuthController.login);
+router.get("/public-members", AuthController.getPublicMembers);
 router.get("/me", authenticate, AuthController.getMe);
 
 router.post(

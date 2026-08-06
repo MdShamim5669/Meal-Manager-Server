@@ -8,11 +8,13 @@ This document provides a step-by-step guide to testing all **Meal Manager Backen
 
 1. **Import Files in Postman**:
    - Collection: `postman/collections/Meal-Manager.postman_collection.json`
-   - Environment: `postman/environments/Local.postman_environment.json`
+   - Environments: 
+     - `postman/environments/Local.postman_environment.json` (Local testing: `http://localhost:5000`)
+     - `postman/environments/Production.postman_environment.json` (Live Render server: `https://meal-manager-server.onrender.com`)
 2. **Select Environment**:
-   - In the top right corner of Postman, select **`Local Environment`**.
+   - In the top right corner of Postman, select **`Local Environment`** (for local development) or **`Production Environment (Render)`** (for deployed production backend).
 3. **Environment Variables**:
-   - `baseUrl` = `http://localhost:5000`
+   - `baseUrl` = `http://localhost:5000` (Local) or `https://meal-manager-server.onrender.com` (Production)
    - `authToken` = *(automatically set upon login)*
 
 ---
