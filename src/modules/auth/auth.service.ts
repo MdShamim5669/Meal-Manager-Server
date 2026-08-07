@@ -17,21 +17,39 @@ import { UnauthorizedError } from "../../errors/UnauthorizedError";
 import { NotFoundError } from "../../errors/NotFoundError";
 
 const setup = async (payload: IAuthSetup): Promise<IAuthResponse> => {
-  const memberCount = await prisma.member.count();
-  if (memberCount > 0) {
-    throw new BadRequestError("System setup already completed. Manager already exists.");
+  // Check if member with same email or phone already exists
+  if (payload.email && payload.email.trim() !== "") {
+    const existingEmail = await prisma.member.findFirst({
+      where: { email: payload.email.trim().toLowerCase() },
+    });
+    if (existingEmail) {
+      throw new BadRequestError("An account with this email address already exists.");
+    }
+  }
+
+  if (payload.phone && payload.phone.trim() !== "") {
+    const existingPhone = await prisma.member.findFirst({
+      where: { phone: payload.phone.trim() },
+    });
+    if (existingPhone) {
+      throw new BadRequestError("An account with this phone number already exists.");
+    }
   }
 
   return prisma.$transaction(async (tx) => {
     const hashedPin = await hashPin(payload.pin);
+    const memberCount = await tx.member.count();
 
-    const manager = await tx.member.create({
+    // Assign role: if first user ever, assign MANAGER; otherwise use requested role or MEMBER
+    const assignedRole = (payload as any).role || (memberCount === 0 ? "MANAGER" : "MEMBER");
+
+    const member = await tx.member.create({
       data: {
-        name: payload.name,
-        email: payload.email,
-        phone: payload.phone,
+        name: payload.name.trim(),
+        email: payload.email ? payload.email.trim().toLowerCase() : null,
+        phone: payload.phone ? payload.phone.trim() : null,
         pinHash: hashedPin,
-        role: "MANAGER",
+        role: assignedRole,
         active: true,
       },
     });
@@ -56,17 +74,17 @@ const setup = async (payload: IAuthSetup): Promise<IAuthResponse> => {
     }
 
     const token = generateToken({
-      memberId: manager.id,
-      name: manager.name,
-      role: manager.role,
+      memberId: member.id,
+      name: member.name,
+      role: member.role,
     });
 
     return {
       token,
       member: {
-        id: manager.id,
-        name: manager.name,
-        role: manager.role,
+        id: member.id,
+        name: member.name,
+        role: member.role,
       },
     };
   });

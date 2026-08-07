@@ -2,10 +2,11 @@ import { z } from "zod";
 
 export const setupSchema = z.object({
   body: z.object({
-    name: z.string().min(1, "Manager name is required"),
-    email: z.string().email("Invalid email address").optional(),
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Invalid email address").optional().or(z.literal("")),
     phone: z.string().optional(),
     pin: z.string().min(4, "PIN must be at least 4 digits"),
+    role: z.enum(["SUPER_ADMIN", "MANAGER", "MEMBER"]).optional(),
     periodLabel: z.string().optional(),
   }),
 });
